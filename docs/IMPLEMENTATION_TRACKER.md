@@ -30,6 +30,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Record confirmed architecture decisions
 - [x] Add backend build and application entry point
 - [x] Add local PostgreSQL infrastructure
+- [x] Add ignored local environment configuration and tracked template
+- [x] Configure Supabase PostgreSQL environment variables with SSL
 - [x] Add initial tenant/company database migration
 - [x] Add tenant context and request boundary
 - [x] Add frontend skeleton and active-company presentation
@@ -42,6 +44,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - Tenant-scoped requests initially require `X-Tenant-Id`.
 - M02 will authorize that tenant against the authenticated user; request input alone will never grant access.
 - Business policies remain configurable until their production activation gates.
+- Supabase PostgreSQL is the hosted database; local Docker PostgreSQL remains an optional development fallback.
 
 ## Verification history
 
@@ -49,6 +52,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 |---|---|---|
 | 2026-09-02 | `mvn test` | PASS - 2 tests, 0 failures |
 | 2026-09-02 | `npm.cmd run build` | PASS - TypeScript and Vite production build |
+| 2026-09-02 | Supabase direct JDBC `SELECT 1` | BLOCKED - direct endpoint not resolvable from current IPv4 environment |
+| 2026-09-02 | Supabase session-pooler JDBC `SELECT 1` | PASS - database credentials and SSL connection verified |
 
 ## Definition of done
 
