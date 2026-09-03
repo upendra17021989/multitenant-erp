@@ -41,3 +41,20 @@ export async function apiFetch(path: string, session: Session, tenantId: string,
   headers.set('X-Tenant-Id', tenantId)
   return fetch(`${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`, { ...init, headers })
 }
+
+export async function apiJson<T>(path: string, session: Session, tenantId: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers)
+  if (init.body) headers.set('Content-Type', 'application/json')
+  const response = await apiFetch(path, session, tenantId, { ...init, headers })
+  if (!response.ok) {
+    let detail = ''
+    try {
+      const problem = await response.json() as { message?: string; error?: string }
+      detail = problem.message ?? problem.error ?? ''
+    } catch {
+      detail = ''
+    }
+    throw new Error(detail || `Request failed (${response.status}).`)
+  }
+  return response.json() as Promise<T>
+}

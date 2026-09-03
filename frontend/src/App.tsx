@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { Alert, AppBar, Box, Button, Chip, CircularProgress, Container, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Toolbar, Typography } from '@mui/material'
 import { loadTenantMemberships, type TenantMembership } from './api'
 import { supabase, supabaseConfigurationMissing } from './supabase'
+import OrganizationAdmin from './OrganizationAdmin'
 
 const ACTIVE_TENANT_KEY = 'erp.activeTenantId'
 
@@ -88,7 +89,7 @@ export default function App() {
         {error && <Alert severity="error">{error}</Alert>}
         <TextField label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         <TextField label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
-        <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</Button>
+        <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Signing inâ€¦' : 'Sign in'}</Button>
       </Stack>
     </Paper>
   </Container>
@@ -106,16 +107,19 @@ export default function App() {
         <Button color="inherit" onClick={signOut}>Sign out</Button>
       </Toolbar>
     </AppBar>
-    <Container maxWidth="md" sx={{ py: 8 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      {busy ? <CircularProgress /> : <Paper sx={{ p: 4 }}>
-        <Typography color="primary">ACTIVE COMPANY</Typography>
-        <Typography variant="h3" gutterBottom>{activeMembership?.legalName ?? 'No company access'}</Typography>
-        {activeMembership ? <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-          <Chip label={activeMembership.companyCode} />
-          {activeMembership.roles.map((role) => <Chip key={role} label={role} color="primary" variant="outlined" />)}
-        </Stack> : <Typography color="text.secondary">Your account is authenticated but has not been assigned to an active company.</Typography>}
-      </Paper>}
+      {busy ? <CircularProgress /> : <Stack spacing={3}>
+        <Paper sx={{ p: 3 }}>
+          <Typography color="primary">ACTIVE COMPANY</Typography>
+          <Typography variant="h4" gutterBottom>{activeMembership?.legalName ?? 'No company access'}</Typography>
+          {activeMembership ? <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <Chip label={activeMembership.companyCode} />
+            {activeMembership.roles.map((role) => <Chip key={role} label={role} color="primary" variant="outlined" />)}
+          </Stack> : <Typography color="text.secondary">Your account is authenticated but has not been assigned to an active company.</Typography>}
+        </Paper>
+        {activeMembership && <OrganizationAdmin session={session} membership={activeMembership} />}
+      </Stack>}
     </Container>
   </Box>
 }

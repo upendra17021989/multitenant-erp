@@ -71,7 +71,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Restrict organisation-master mutations by tenant role
 - [x] Add department, designation, grade and cost-centre APIs
 - [x] Add holiday-list APIs
-- [ ] Add organisation-master administration screens
+- [x] Add organisation-master administration screens
 - [ ] Add tenant-isolation integration tests for organisation masters
 
 ## Verification history
@@ -88,6 +88,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-03 | Secured startup on port 18080 | PASS - health 200; unauthenticated `/api/me` 401 |
 | 2026-09-03 | `mvn clean verify` after organisation API implementation | PASS - 7 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-03 | Supabase Flyway migration V3 | PASS - organisation-master schema recorded at version 3 |
+| 2026-09-03 | `npm.cmd run build` after frontend organisation administration UI | PASS - TypeScript and Vite production build |
 
 ## Definition of done
 
