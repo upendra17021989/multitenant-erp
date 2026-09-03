@@ -30,3 +30,28 @@ Start with `docs/IMPLEMENTATION_TRACKER.md`. It is the durable source of truth f
 The API health endpoint is `GET /api/health`.
 
 Use a Supabase direct connection for Flyway migrations when IPv6 is available. On IPv4-only networks, use the Session pooler on port 5432. Do not use transaction pooling for Flyway or this persistent Spring Boot service.
+
+## Deployment
+
+### Frontend on Vercel
+
+1. Import this repository into Vercel and set the project Root Directory to `frontend`.
+2. Set `VITE_API_BASE_URL` to `https://YOUR_CLOUD_RUN_SERVICE_URL/api` for Production and Preview as appropriate.
+3. Deploy. Vercel uses `frontend/vercel.json` to build the Vite application into `dist` and provide SPA routing.
+
+### Backend on Cloud Run
+
+Build and deploy from the backend directory:
+
+```sh
+gcloud run deploy multitenant-erp-backend --source backend --region YOUR_REGION --allow-unauthenticated
+```
+
+Configure these Cloud Run runtime variables in **Edit and deploy new revision > Variables & Secrets**:
+
+- `DB_URL`: Supabase Session pooler JDBC URL on port 5432
+- `DB_USERNAME`: Supabase pooler username
+- `DB_PASSWORD`: Supabase database password (prefer a Secret Manager reference)
+- `CORS_ALLOWED_ORIGINS`: comma-separated Vercel origins, for example `https://example.vercel.app,https://example.com`
+
+Cloud Run supplies `PORT` automatically. The application reads it through `server.port`. The local `backend/.env` file is optional and is excluded from the container image.
