@@ -1,33 +1,121 @@
-import { AppBar, Box, Chip, Container, Paper, Stack, Toolbar, Typography } from '@mui/material'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { Alert, AppBar, Box, Button, Chip, CircularProgress, Container, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Toolbar, Typography } from '@mui/material'
+import { loadTenantMemberships, type TenantMembership } from './api'
+import { supabase, supabaseConfigurationMissing } from './supabase'
 
-const milestones = [
-  'Tenant-aware platform foundation',
-  'Authentication and per-company authorization',
-  'Organisation setup and employee master',
-  'Attendance, leave, salary and payroll',
-]
+const ACTIVE_TENANT_KEY = 'erp.activeTenantId'
 
 export default function App() {
-  return (
-    <Box sx={{ minHeight: '100vh' }}>
-      <AppBar position="static" elevation={0}>
-        <Toolbar sx={{ gap: 2 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>HR & Payroll ERP</Typography>
-          <Chip label="No active company" color="warning" />
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Paper sx={{ p: 4 }}>
-          <Typography color="primary">MILESTONE 1</Typography>
-          <Typography variant="h3" gutterBottom>Platform foundation</Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            The active company will always be visible and authorized by the backend.
-          </Typography>
-          <Stack spacing={2}>
-            {milestones.map((item, index) => <Chip key={item} label={`${index + 1}. ${item}`} />)}
-          </Stack>
-        </Paper>
-      </Container>
-    </Box>
+  const [session, setSession] = useState<Session | null>(null)
+  const [loadingSession, setLoadingSession] = useState(true)
+  const [memberships, setMemberships] = useState<TenantMembership[]>([])
+  const [activeTenantId, setActiveTenantId] = useState(localStorage.getItem(ACTIVE_TENANT_KEY) ?? '')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoadingSession(false)
+      return
+    }
+    void supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setLoadingSession(false)
+    })
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession))
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (!session) {
+      setMemberships([])
+      return
+    }
+    setBusy(true)
+    setError('')
+    void loadTenantMemberships(session)
+      .then((items) => {
+        setMemberships(items)
+        const savedIsAllowed = items.some((item) => item.tenantId === activeTenantId)
+        const nextTenantId = savedIsAllowed ? activeTenantId : (items[0]?.tenantId ?? '')
+        setActiveTenantId(nextTenantId)
+        if (nextTenantId) localStorage.setItem(ACTIVE_TENANT_KEY, nextTenantId)
+      })
+      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Unable to load company access.'))
+      .finally(() => setBusy(false))
+  }, [session])
+
+  const activeMembership = useMemo(
+    () => memberships.find((item) => item.tenantId === activeTenantId),
+    [activeTenantId, memberships],
   )
+
+  async function signIn(event: FormEvent) {
+    event.preventDefault()
+    if (!supabase) return
+    setBusy(true)
+    setError('')
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError) setError(signInError.message)
+    setBusy(false)
+  }
+
+  async function signOut() {
+    await supabase?.auth.signOut()
+    localStorage.removeItem(ACTIVE_TENANT_KEY)
+    setActiveTenantId('')
+  }
+
+  function selectTenant(tenantId: string) {
+    setActiveTenantId(tenantId)
+    localStorage.setItem(ACTIVE_TENANT_KEY, tenantId)
+  }
+
+  if (loadingSession) return <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><CircularProgress /></Box>
+
+  if (supabaseConfigurationMissing) return <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Alert severity="error">Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.</Alert>
+  </Container>
+
+  if (!session) return <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Paper component="form" onSubmit={signIn} sx={{ p: 4 }}>
+      <Stack spacing={3}>
+        <Typography variant="h4">Sign in</Typography>
+        <Typography color="text.secondary">Use your organisation account to access the HR & Payroll ERP.</Typography>
+        {error && <Alert severity="error">{error}</Alert>}
+        <TextField label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+        <TextField label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+        <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</Button>
+      </Stack>
+    </Paper>
+  </Container>
+
+  return <Box sx={{ minHeight: '100vh' }}>
+    <AppBar position="static" elevation={0}>
+      <Toolbar sx={{ gap: 2 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>HR & Payroll ERP</Typography>
+        {memberships.length > 0 && <FormControl size="small" sx={{ minWidth: 220, bgcolor: 'background.paper', borderRadius: 1 }}>
+          <InputLabel>Active company</InputLabel>
+          <Select label="Active company" value={activeTenantId} onChange={(event) => selectTenant(event.target.value)}>
+            {memberships.map((membership) => <MenuItem key={membership.tenantId} value={membership.tenantId}>{membership.legalName}</MenuItem>)}
+          </Select>
+        </FormControl>}
+        <Button color="inherit" onClick={signOut}>Sign out</Button>
+      </Toolbar>
+    </AppBar>
+    <Container maxWidth="md" sx={{ py: 8 }}>
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {busy ? <CircularProgress /> : <Paper sx={{ p: 4 }}>
+        <Typography color="primary">ACTIVE COMPANY</Typography>
+        <Typography variant="h3" gutterBottom>{activeMembership?.legalName ?? 'No company access'}</Typography>
+        {activeMembership ? <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+          <Chip label={activeMembership.companyCode} />
+          {activeMembership.roles.map((role) => <Chip key={role} label={role} color="primary" variant="outlined" />)}
+        </Stack> : <Typography color="text.secondary">Your account is authenticated but has not been assigned to an active company.</Typography>}
+      </Paper>}
+    </Container>
+  </Box>
 }

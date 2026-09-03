@@ -10,6 +10,7 @@ Accepted on 2026-09-02:
 6. Approved payroll and financial history is immutable. Corrections use reversal, replacement, or effective-dated versions.
 7. Attendance, leave, salary, approval, and payroll rules are configurable and effective-dated.
 8. Indian statutory rates, thresholds, applicability, and formulas are configurable and effective-dated.
+9. Supabase Auth issues user sessions. The backend validates Supabase JWT signature, issuer, and expiry, then resolves tenant roles from PostgreSQL; JWT or request input never grants tenant membership by itself.
 
 ## Initial architecture
 

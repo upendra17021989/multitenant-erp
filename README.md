@@ -21,11 +21,12 @@ Start with `docs/IMPLEMENTATION_TRACKER.md`. It is the durable source of truth f
 
 ## Local development
 
-1. Copy `.env.example` to `.env` and enter the JDBC values from Supabase Dashboard > Connect.
-2. Export `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` from `.env`, then run the API: `mvn -f backend/pom.xml spring-boot:run`.
+1. Copy `.env.example` to `backend/.env` and enter the JDBC and Supabase Auth values.
+2. Run the API: `mvn -f backend/pom.xml spring-boot:run`. Spring loads `backend/.env` automatically for local development.
 3. For optional local PostgreSQL instead, run `docker compose --env-file .env -f infrastructure/docker-compose.yml up -d` and override the backend database variables.
 4. Install UI dependencies: `npm.cmd --prefix frontend install`
-5. Run the UI: `npm.cmd --prefix frontend run dev`
+5. Create `frontend/.env.local` with `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_PUBLISHABLE_KEY`.
+6. Run the UI: `npm.cmd --prefix frontend run dev`
 
 The API health endpoint is `GET /api/health`.
 
@@ -35,8 +36,8 @@ Use a Supabase direct connection for Flyway migrations when IPv6 is available. O
 
 ### Frontend on Vercel
 
-1. Import this repository into Vercel and set the project Root Directory to `frontend`.
-2. Set `VITE_API_BASE_URL` to `https://YOUR_CLOUD_RUN_SERVICE_URL/api` for Production and Preview as appropriate.
+1. Import this repository into Vercel. The root `vercel.json` installs and builds only `frontend`.
+2. Set `VITE_API_BASE_URL` to `https://YOUR_CLOUD_RUN_SERVICE_URL/api`, plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, for Production and Preview as appropriate.
 3. Deploy. Vercel uses `frontend/vercel.json` to build the Vite application into `dist` and provide SPA routing.
 
 ### Backend on Cloud Run
@@ -52,6 +53,8 @@ Configure these Cloud Run runtime variables in **Edit and deploy new revision > 
 - `DB_URL`: Supabase Session pooler JDBC URL on port 5432
 - `DB_USERNAME`: Supabase pooler username
 - `DB_PASSWORD`: Supabase database password (prefer a Secret Manager reference)
+- `SUPABASE_JWT_ISSUER`: `https://YOUR_PROJECT_REF.supabase.co/auth/v1`
+- `SUPABASE_JWKS_URL`: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/.well-known/jwks.json`
 - `CORS_ALLOWED_ORIGINS`: comma-separated Vercel origins, for example `https://example.vercel.app,https://example.com`
 
 Cloud Run supplies `PORT` automatically. The application reads it through `server.port`. The local `backend/.env` file is optional and is excluded from the container image.

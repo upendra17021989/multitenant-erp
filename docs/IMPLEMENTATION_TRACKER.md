@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-02
+Last updated: 2026-09-03
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -9,9 +9,9 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | ID | Milestone | Status |
 |---|---|---|
 | M00 | Requirements and foundational decisions | DONE |
-| M01 | Repository and application foundation | IN PROGRESS |
-| M02 | Authentication and tenant-aware authorization | NEXT |
-| M03 | Tenant onboarding and organisation masters | BACKLOG |
+| M01 | Repository and application foundation | DONE |
+| M02 | Authentication and tenant-aware authorization | IN PROGRESS |
+| M03 | Tenant onboarding and organisation masters | NEXT |
 | M04 | Employee master and documents | BACKLOG |
 | M05 | Attendance, shifts and holidays | BACKLOG |
 | M06 | Leave management | BACKLOG |
@@ -37,7 +37,22 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add frontend skeleton and active-company presentation
 - [x] Run backend tests successfully
 - [x] Install frontend dependencies and run production build
-- [ ] Confirm clean migration against PostgreSQL
+- [x] Confirm Flyway baseline and subsequent migration against Supabase PostgreSQL
+
+## M02 checklist
+
+- [x] Add Spring Security OAuth2 resource-server support
+- [x] Validate Supabase access-token signature, issuer and expiry through JWKS
+- [x] Link application users to Supabase Auth identities
+- [x] Resolve active tenant roles from PostgreSQL
+- [x] Reject unassigned tenant IDs at the backend request boundary
+- [x] Add authenticated current-user and authorized-company endpoints
+- [x] Add reusable tenant-role authorization helper
+- [x] Add frontend Supabase email/password session handling
+- [x] Add frontend authorized-company selector and tenant-aware API client
+- [x] Add cross-tenant authorization tests
+- [ ] Provision initial Supabase Auth users and map their company roles
+- [ ] Complete authenticated end-to-end test with a real user session
 
 ## Current notes
 
@@ -54,6 +69,10 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-02 | `npm.cmd run build` | PASS - TypeScript and Vite production build |
 | 2026-09-02 | Supabase direct JDBC `SELECT 1` | BLOCKED - direct endpoint not resolvable from current IPv4 environment |
 | 2026-09-02 | Supabase session-pooler JDBC `SELECT 1` | PASS - database credentials and SSL connection verified |
+| 2026-09-03 | `mvn clean verify` | PASS - 7 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-03 | `npm.cmd run build` | PASS - authenticated TypeScript/Vite production build |
+| 2026-09-03 | Supabase Flyway migration V2 | PASS - Auth identity mapping schema recorded at version 2 |
+| 2026-09-03 | Secured startup on port 18080 | PASS - health 200; unauthenticated `/api/me` 401 |
 
 ## Definition of done
 
