@@ -11,7 +11,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M00 | Requirements and foundational decisions | DONE |
 | M01 | Repository and application foundation | DONE |
 | M02 | Authentication and tenant-aware authorization | IN PROGRESS |
-| M03 | Tenant onboarding and organisation masters | NEXT |
+| M03 | Tenant onboarding and organisation masters | IN PROGRESS |
 | M04 | Employee master and documents | BACKLOG |
 | M05 | Attendance, shifts and holidays | BACKLOG |
 | M06 | Leave management | BACKLOG |
@@ -60,6 +60,19 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - M02 will authorize that tenant against the authenticated user; request input alone will never grant access.
 - Business policies remain configurable until their production activation gates.
 - Supabase PostgreSQL is the hosted database; local Docker PostgreSQL remains an optional development fallback.
+- The authenticated M02 end-to-end test awaits frontend Supabase configuration and a provisioned test user.
+
+## M03 checklist
+
+- [x] Add tenant-scoped organisation-master schema
+- [x] Add company legal/statutory profile API
+- [x] Add branch/location create, list and update APIs
+- [x] Enforce tenant-aware master-data uniqueness in PostgreSQL
+- [x] Restrict organisation-master mutations by tenant role
+- [ ] Add department, designation, grade and cost-centre APIs
+- [ ] Add holiday-list APIs
+- [ ] Add organisation-master administration screens
+- [ ] Add tenant-isolation integration tests for organisation masters
 
 ## Verification history
 
@@ -73,6 +86,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-03 | `npm.cmd run build` | PASS - authenticated TypeScript/Vite production build |
 | 2026-09-03 | Supabase Flyway migration V2 | PASS - Auth identity mapping schema recorded at version 2 |
 | 2026-09-03 | Secured startup on port 18080 | PASS - health 200; unauthenticated `/api/me` 401 |
+| 2026-09-03 | `mvn clean verify` after organisation API implementation | PASS - 7 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-03 | Supabase Flyway migration V3 | PASS - organisation-master schema recorded at version 3 |
 
 ## Definition of done
 

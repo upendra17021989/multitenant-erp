@@ -13,6 +13,7 @@ spring:
         jwt:
           issuer-uri: ${SUPABASE_JWT_ISSUER}
           jwk-set-uri: ${SUPABASE_JWKS_URL}
+          jws-algorithms: ES256
   jpa:
     hibernate:
       ddl-auto: validate

@@ -14,8 +14,22 @@ export async function loadTenantMemberships(session: Session): Promise<TenantMem
     headers: { Authorization: `Bearer ${session.access_token}` },
   })
   if (!response.ok) {
-    throw new Error(response.status === 401
-      ? 'Your session is not authorized by the backend.'
+    if (response.status === 401) {
+      const challenge = response.headers.get('www-authenticate')
+      const description = challenge?.match(/error_description="([^"]+)"/)?.[1]
+      throw new Error(description
+        ? `Backend rejected the session: ${description}`
+        : 'Your session is not authorized by the backend.')
+    }
+    let detail = ''
+    try {
+      const problem = await response.json() as { message?: string; error?: string }
+      detail = problem.message ?? problem.error ?? ''
+    } catch {
+      detail = await response.text().catch(() => '')
+    }
+    throw new Error(detail
+      ? `Unable to load company access (${response.status}): ${detail}`
       : `Unable to load company access (${response.status}).`)
   }
   return response.json() as Promise<TenantMembership[]>
