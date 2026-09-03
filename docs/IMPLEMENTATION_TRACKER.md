@@ -69,8 +69,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add branch/location create, list and update APIs
 - [x] Enforce tenant-aware master-data uniqueness in PostgreSQL
 - [x] Restrict organisation-master mutations by tenant role
-- [ ] Add department, designation, grade and cost-centre APIs
-- [ ] Add holiday-list APIs
+- [x] Add department, designation, grade and cost-centre APIs
+- [x] Add holiday-list APIs
 - [ ] Add organisation-master administration screens
 - [ ] Add tenant-isolation integration tests for organisation masters
 
