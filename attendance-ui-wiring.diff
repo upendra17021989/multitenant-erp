@@ -1,0 +1,40 @@
+diff --git a/frontend/src/App.tsx b/frontend/src/App.tsx
+--- a/frontend/src/App.tsx
++++ b/frontend/src/App.tsx
+@@ -7,1 +7,2 @@
+ import EmployeeAdmin from './EmployeeAdmin'
++import AttendanceAdmin from './AttendanceAdmin'
+@@ -20,1 +21,1 @@
+-  const [module, setModule] = useState<'organization' | 'employees'>('organization')
++  const [module, setModule] = useState<'organization' | 'employees' | 'attendance'>('organization')
+@@ -126,7 +127,8 @@
+-          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees') => setModule(value)}>
++          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees' | 'attendance') => setModule(value)}>
+             <Tab value="organization" label="Organisation" />
+             {canViewEmployees && <Tab value="employees" label="Employees" />}
++            {canViewEmployees && <Tab value="attendance" label="Attendance" />}
+           </Tabs></Paper>
+-          {module === 'organization' || !canViewEmployees
+-            ? <OrganizationAdmin session={session} membership={activeMembership} />
+-            : <EmployeeAdmin session={session} membership={activeMembership} />}
++          {(module === 'organization' || !canViewEmployees) && <OrganizationAdmin session={session} membership={activeMembership} />}
++          {module === 'employees' && canViewEmployees && <EmployeeAdmin session={session} membership={activeMembership} />}
++          {module === 'attendance' && canViewEmployees && <AttendanceAdmin session={session} membership={activeMembership} />}
+diff --git a/docs/IMPLEMENTATION_TRACKER.md b/docs/IMPLEMENTATION_TRACKER.md
+--- a/docs/IMPLEMENTATION_TRACKER.md
++++ b/docs/IMPLEMENTATION_TRACKER.md
+@@ -103,7 +103,8 @@
+ - [ ] Add full attendance-record and month-lock tenant-isolation tests
+ - [ ] Add tenant-specific timezone configuration
+- [ ] Add CSV attendance import and validation
++- [x] Add backend CSV attendance import with row-level validation and summary
++- [x] Add CSV attendance upload controls to the attendance UI
+ - [ ] Add missing-punch correction and approval workflow
+ - [ ] Add overtime approval workflow
+- [ ] Add attendance administration screens
++- [x] Add attendance administration screens
+ - [ ] Add attendance summaries and exception reports
+@@ -136,1 +137,3 @@
+ | 2026-09-04 | `mvn test` after attendance evaluation | PASS - 19 tests, 0 failures, 1 environment-dependent test skipped |
++| 2026-09-04 | `mvn test` after CSV attendance import | PASS - 21 tests, 0 failures, 1 environment-dependent test skipped |
++| 2026-09-04 | `npm.cmd run build` after attendance administration UI | PASS - TypeScript and Vite production build; bundle-size warning remains |

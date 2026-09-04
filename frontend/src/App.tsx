@@ -5,6 +5,7 @@ import { loadTenantMemberships, type TenantMembership } from './api'
 import { supabase, supabaseConfigurationMissing } from './supabase'
 import OrganizationAdmin from './OrganizationAdmin'
 import EmployeeAdmin from './EmployeeAdmin'
+import AttendanceAdmin from './AttendanceAdmin'
 
 const ACTIVE_TENANT_KEY = 'erp.activeTenantId'
 
@@ -17,7 +18,7 @@ export default function App() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [module, setModule] = useState<'organization' | 'employees'>('organization')
+  const [module, setModule] = useState<'organization' | 'employees' | 'attendance'>('organization')
 
   useEffect(() => {
     if (!supabase) {
@@ -123,13 +124,14 @@ export default function App() {
           </Stack> : <Typography color="text.secondary">Your account is authenticated but has not been assigned to an active company.</Typography>}
         </Paper>
         {activeMembership && <>
-          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees') => setModule(value)}>
+          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees' | 'attendance') => setModule(value)}>
             <Tab value="organization" label="Organisation" />
             {canViewEmployees && <Tab value="employees" label="Employees" />}
+            {canViewEmployees && <Tab value="attendance" label="Attendance" />}
           </Tabs></Paper>
-          {module === 'organization' || !canViewEmployees
-            ? <OrganizationAdmin session={session} membership={activeMembership} />
-            : <EmployeeAdmin session={session} membership={activeMembership} />}
+          {(module === 'organization' || !canViewEmployees) && <OrganizationAdmin session={session} membership={activeMembership} />}
+          {module === 'employees' && canViewEmployees && <EmployeeAdmin session={session} membership={activeMembership} />}
+          {module === 'attendance' && canViewEmployees && <AttendanceAdmin session={session} membership={activeMembership} />}
         </>}
       </Stack>}
     </Container>

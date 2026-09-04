@@ -102,10 +102,11 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Prevent records from being moved out of locked attendance months
 - [ ] Add full attendance-record and month-lock tenant-isolation tests
 - [ ] Add tenant-specific timezone configuration
-- [ ] Add CSV attendance import and validation
+- [x] Add backend CSV attendance import with row-level validation and summary
+- [x] Add CSV attendance upload controls to the attendance UI
 - [ ] Add missing-punch correction and approval workflow
 - [ ] Add overtime approval workflow
-- [ ] Add attendance administration screens
+- [x] Add attendance administration screens
 - [ ] Add attendance summaries and exception reports
 
 ## Verification history
@@ -134,6 +135,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | Packaged backend startup against Supabase | PASS - Flyway validation succeeded; `/api/employees` returned expected unauthenticated 401 |
 | 2026-09-04 | `npm.cmd run build` after employee document UI | PASS - TypeScript and Vite production build; Node upgrade warning remains |
 | 2026-09-04 | `mvn test` after attendance evaluation | PASS - 19 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-04 | `mvn test` after CSV attendance import | PASS - 21 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-04 | `npm.cmd run build` after attendance administration UI | PASS - TypeScript and Vite production build; bundle-size warning remains |
 
 ## Definition of done
 
