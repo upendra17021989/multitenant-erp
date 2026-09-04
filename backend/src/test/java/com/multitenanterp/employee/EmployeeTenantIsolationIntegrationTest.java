@@ -5,12 +5,15 @@ import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,7 +22,9 @@ class EmployeeTenantIsolationIntegrationTest {
     private final UUID tenantA = UUID.randomUUID();
     private final UUID tenantB = UUID.randomUUID();
     private EmployeeService service;
+    private EmployeeDocumentService documents;
     private JdbcClient db;
+    @TempDir Path storageRoot;
 
     @BeforeEach
     void setUp() {
@@ -29,6 +34,7 @@ class EmployeeTenantIsolationIntegrationTest {
         createSchema();
         db.sql("INSERT INTO tenant(id) VALUES(?),(?)").params(tenantA, tenantB).update();
         service = new EmployeeService(dataSource);
+        documents = new EmployeeDocumentService(db, new FileSystemDocumentStorage(storageRoot.toString()));
     }
 
     @AfterEach void clearTenant() { TenantContext.clear(); }
@@ -78,6 +84,24 @@ class EmployeeTenantIsolationIntegrationTest {
                 exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
+    @Test
+    void employeeDocumentsUseTenantScopedMetadataAndStorageKeys() throws Exception {
+        TenantContext.set(tenantA);
+        Employee employee = service.create(request("DOC001", "Document", null));
+        EmployeeDocument uploaded = documents.upload(employee.id(), "IDENTITY_PROOF",
+                new MockMultipartFile("file", "../identity.pdf", "application/pdf", "pdf-content".getBytes()));
+        assertThat(uploaded.fileName()).isEqualTo("identity.pdf");
+        assertThat(documents.documents(employee.id())).extracting(EmployeeDocument::id).containsExactly(uploaded.id());
+        assertThat(documents.download(employee.id(), uploaded.id()).resource().getContentAsByteArray()).isEqualTo("pdf-content".getBytes());
+        assertThat(storageRoot.resolve(tenantA.toString()).resolve(employee.id().toString()).resolve(uploaded.id().toString())).exists();
+
+        TenantContext.set(tenantB);
+        assertThatThrownBy(() -> documents.documents(employee.id())).isInstanceOfSatisfying(ResponseStatusException.class,
+                exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> documents.download(employee.id(), uploaded.id())).isInstanceOfSatisfying(ResponseStatusException.class,
+                exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
     private SaveEmployeeRequest request(String number, String firstName, UUID branchId) {
         return request(number, firstName, branchId, LocalDate.of(2026,1,1), null);
     }
@@ -112,5 +136,6 @@ class EmployeeTenantIsolationIntegrationTest {
                 FOREIGN KEY(person_id,tenant_id) REFERENCES person(id,tenant_id),
                 FOREIGN KEY(branch_id,tenant_id) REFERENCES branch(id,tenant_id))
                 """).update();
+        db.sql("CREATE TABLE employee_document(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,employment_id UUID NOT NULL,document_type VARCHAR(40),file_name VARCHAR(255),content_type VARCHAR(150),size_bytes BIGINT,storage_key VARCHAR(500) UNIQUE,uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY(employment_id,tenant_id) REFERENCES employment(id,tenant_id))").update();
     }
 }
