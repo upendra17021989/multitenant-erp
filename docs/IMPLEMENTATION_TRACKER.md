@@ -86,6 +86,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add employee administration screens
 - [x] Add employee document metadata and tenant-separated storage abstraction
 - [x] Add employee document upload, listing and download APIs
+- [x] Add employee document upload, listing and download controls to the employee UI
 - [x] Add a durable Supabase Storage adapter and server-only configuration
 - [ ] Provision the private document bucket and storage credentials in the deployed environment
 
@@ -113,6 +114,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | `mvn clean verify` after Supabase Storage adapter | PASS - 15 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-04 | Supabase Flyway reconciliation after manual V4/V5 table creation | PASS - schema verified and Flyway history advanced to version 5 |
 | 2026-09-04 | Packaged backend startup against Supabase | PASS - Flyway validation succeeded; `/api/employees` returned expected unauthenticated 401 |
+| 2026-09-04 | `npm.cmd run build` after employee document UI | PASS - TypeScript and Vite production build; Node upgrade warning remains |
 
 ## Definition of done
 
