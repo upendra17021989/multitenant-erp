@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-03
+Last updated: 2026-09-04
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -11,7 +11,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M00 | Requirements and foundational decisions | DONE |
 | M01 | Repository and application foundation | DONE |
 | M02 | Authentication and tenant-aware authorization | IN PROGRESS |
-| M03 | Tenant onboarding and organisation masters | IN PROGRESS |
+| M03 | Tenant onboarding and organisation masters | DONE |
 | M04 | Employee master and documents | BACKLOG |
 | M05 | Attendance, shifts and holidays | BACKLOG |
 | M06 | Leave management | BACKLOG |
@@ -72,7 +72,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add department, designation, grade and cost-centre APIs
 - [x] Add holiday-list APIs
 - [x] Add organisation-master administration screens
-- [ ] Add tenant-isolation integration tests for organisation masters
+- [x] Add tenant-isolation integration tests for organisation masters
 
 ## Verification history
 
@@ -89,6 +89,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-03 | `mvn clean verify` after organisation API implementation | PASS - 7 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-03 | Supabase Flyway migration V3 | PASS - organisation-master schema recorded at version 3 |
 | 2026-09-03 | `npm.cmd run build` after frontend organisation administration UI | PASS - TypeScript and Vite production build |
+| 2026-09-04 | `mvn clean verify` after organisation tenant-isolation integration tests | PASS - 10 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 
