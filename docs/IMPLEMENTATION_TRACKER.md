@@ -61,7 +61,6 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - Business policies remain configurable until their production activation gates.
 - Supabase PostgreSQL is the hosted database; local Docker PostgreSQL remains an optional development fallback.
 - The authenticated M02 end-to-end test awaits frontend Supabase configuration and a provisioned test user.
-- Employee migration V4 is pending because the Supabase session pool reported its 15-client limit was reached on 2026-09-04.
 
 ## M03 checklist
 
@@ -83,7 +82,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Enforce same-tenant organisation and reporting-manager assignments in PostgreSQL
 - [x] Restrict employee data access and mutations by tenant role
 - [x] Add employee tenant-isolation integration tests
-- [ ] Apply and verify employee migration against Supabase PostgreSQL
+- [x] Apply and verify employee migrations against Supabase PostgreSQL
 - [x] Add employee administration screens
 - [x] Add employee document metadata and tenant-separated storage abstraction
 - [x] Add employee document upload, listing and download APIs
@@ -112,6 +111,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | Supabase Flyway migration V4 retry with reduced application pool | BLOCKED - Supabase session pool remains at its 15-client limit |
 | 2026-09-04 | `mvn clean verify` after employee document APIs | PASS - 14 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-04 | `mvn clean verify` after Supabase Storage adapter | PASS - 15 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-04 | Supabase Flyway reconciliation after manual V4/V5 table creation | PASS - schema verified and Flyway history advanced to version 5 |
+| 2026-09-04 | Packaged backend startup against Supabase | PASS - Flyway validation succeeded; `/api/employees` returned expected unauthenticated 401 |
 
 ## Definition of done
 

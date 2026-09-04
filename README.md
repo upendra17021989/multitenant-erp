@@ -53,6 +53,8 @@ Configure these Cloud Run runtime variables in **Edit and deploy new revision > 
 - `DB_URL`: Supabase Session pooler JDBC URL on port 5432
 - `DB_USERNAME`: Supabase pooler username
 - `DB_PASSWORD`: Supabase database password (prefer a Secret Manager reference)
+- `DB_POOL_MAX_SIZE`: maximum JDBC connections per backend instance; default `3`
+- `DB_POOL_MIN_IDLE`: idle JDBC connections retained per instance; default `0`
 - `SUPABASE_JWT_ISSUER`: `https://YOUR_PROJECT_REF.supabase.co/auth/v1`
 - `SUPABASE_JWKS_URL`: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/.well-known/jwks.json`
 - `CORS_ALLOWED_ORIGINS`: comma-separated Vercel origins, for example `https://example.vercel.app,https://example.com`
