@@ -12,7 +12,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M01 | Repository and application foundation | DONE |
 | M02 | Authentication and tenant-aware authorization | IN PROGRESS |
 | M03 | Tenant onboarding and organisation masters | DONE |
-| M04 | Employee master and documents | BACKLOG |
+| M04 | Employee master and documents | IN PROGRESS |
 | M05 | Attendance, shifts and holidays | BACKLOG |
 | M06 | Leave management | BACKLOG |
 | M07 | Salary structure and rules engine | BACKLOG |
@@ -74,6 +74,19 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add organisation-master administration screens
 - [x] Add tenant-isolation integration tests for organisation masters
 
+## M04 checklist
+
+- [x] Add separate tenant-scoped person and employment schema
+- [x] Add employee create, list, detail and update APIs
+- [x] Validate employment dates and tenant-local employee numbers
+- [x] Enforce same-tenant organisation and reporting-manager assignments in PostgreSQL
+- [x] Restrict employee data access and mutations by tenant role
+- [x] Add employee tenant-isolation integration tests
+- [ ] Apply and verify employee migration against Supabase PostgreSQL
+- [ ] Add employee administration screens
+- [ ] Add employee document metadata and tenant-separated object storage
+- [ ] Add employee document upload, listing and download APIs
+
 ## Verification history
 
 | Date | Check | Result |
@@ -90,6 +103,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-03 | Supabase Flyway migration V3 | PASS - organisation-master schema recorded at version 3 |
 | 2026-09-03 | `npm.cmd run build` after frontend organisation administration UI | PASS - TypeScript and Vite production build |
 | 2026-09-04 | `mvn clean verify` after organisation tenant-isolation integration tests | PASS - 10 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-04 | `mvn clean verify` after employee-master API implementation | PASS - 13 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 
