@@ -13,7 +13,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M02 | Authentication and tenant-aware authorization | IN PROGRESS |
 | M03 | Tenant onboarding and organisation masters | DONE |
 | M04 | Employee master and documents | IN PROGRESS |
-| M05 | Attendance, shifts and holidays | BACKLOG |
+| M05 | Attendance, shifts and holidays | IN PROGRESS |
 | M06 | Leave management | BACKLOG |
 | M07 | Salary structure and rules engine | BACKLOG |
 | M08 | Statutory calculation framework | BACKLOG |
@@ -90,6 +90,24 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add a durable Supabase Storage adapter and server-only configuration
 - [ ] Provision the private document bucket and storage credentials in the deployed environment
 
+## M05 checklist
+
+- [x] Add tenant-scoped effective-dated shift schema and APIs
+- [x] Add employee shift-assignment schema and APIs
+- [x] Add daily attendance-record schema and APIs
+- [x] Add tenant-scoped attendance month locking and reopening
+- [x] Add initial shift tenant-isolation integration test
+- [x] Add attendance evaluation for full day, half day, absence and missing punches
+- [x] Add grace-period, overtime and overnight-shift evaluation
+- [x] Prevent records from being moved out of locked attendance months
+- [ ] Add full attendance-record and month-lock tenant-isolation tests
+- [ ] Add tenant-specific timezone configuration
+- [ ] Add CSV attendance import and validation
+- [ ] Add missing-punch correction and approval workflow
+- [ ] Add overtime approval workflow
+- [ ] Add attendance administration screens
+- [ ] Add attendance summaries and exception reports
+
 ## Verification history
 
 | Date | Check | Result |
@@ -115,6 +133,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | Supabase Flyway reconciliation after manual V4/V5 table creation | PASS - schema verified and Flyway history advanced to version 5 |
 | 2026-09-04 | Packaged backend startup against Supabase | PASS - Flyway validation succeeded; `/api/employees` returned expected unauthenticated 401 |
 | 2026-09-04 | `npm.cmd run build` after employee document UI | PASS - TypeScript and Vite production build; Node upgrade warning remains |
+| 2026-09-04 | `mvn test` after attendance evaluation | PASS - 19 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 

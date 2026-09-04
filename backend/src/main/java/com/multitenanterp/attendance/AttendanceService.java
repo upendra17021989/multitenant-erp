@@ -19,6 +19,7 @@ import java.util.UUID;
 @Service
 public class AttendanceService {
     private final JdbcClient db;
+    private final AttendanceEvaluationService evaluationService = new AttendanceEvaluationService();
     public AttendanceService(JdbcClient db) { this.db = db; }
 
     public List<WorkShift> shifts(LocalDate onDate) {
@@ -87,22 +88,40 @@ public class AttendanceService {
     @Transactional
     public AttendanceRecord saveAttendance(UUID id, SaveAttendanceRequest r) {
         requireUnlocked(r.attendanceDate());
-        if(r.checkOut()!=null&&(r.checkIn()==null||r.checkOut().isBefore(r.checkIn()))) throw badRequest("Check-out cannot precede check-in");
+
+        if (id != null) {
+            LocalDate existingDate = db.sql("""
+                    SELECT attendance_date
+                    FROM attendance_record
+                    WHERE id=:id AND tenant_id=:tenant
+                    """)
+                    .param("id", id)
+                    .param("tenant", tenant())
+                    .query(LocalDate.class)
+                    .optional()
+                    .orElseThrow(() -> missing("Attendance record"));
+            requireUnlocked(existingDate);
+        }
+
+        if (r.checkOut() != null && (r.checkIn() == null || r.checkOut().isBefore(r.checkIn())))
+            throw badRequest("Check-out cannot precede check-in");
+
+        EvaluatedAttendance evaluated = evaluate(r);
         boolean create=id==null; id=create?UUID.randomUUID():id;
         try {
             int count=create?db.sql("""
                     INSERT INTO attendance_record(id,tenant_id,employment_id,attendance_date,shift_id,status,check_in,check_out,worked_minutes,overtime_minutes,source,notes)
                     VALUES(:id,:tenant,:employee,:date,:shift,:status,:in,:out,:worked,:overtime,:source,:notes)
                     """).param("id",id).param("tenant",tenant()).param("employee",r.employmentId()).param("date",r.attendanceDate()).param("shift",r.shiftId())
-                    .param("status",normalize(r.status())).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",r.workedMinutes())
-                    .param("overtime",r.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update()
+                    .param("status",evaluated.status()).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",evaluated.workedMinutes())
+                    .param("overtime",evaluated.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update()
                     :db.sql("""
                     UPDATE attendance_record SET employment_id=:employee,attendance_date=:date,shift_id=:shift,status=:status,
                       check_in=:in,check_out=:out,worked_minutes=:worked,overtime_minutes=:overtime,source=:source,notes=:notes,updated_at=CURRENT_TIMESTAMP
                     WHERE id=:id AND tenant_id=:tenant
                     """).param("id",id).param("tenant",tenant()).param("employee",r.employmentId()).param("date",r.attendanceDate()).param("shift",r.shiftId())
-                    .param("status",normalize(r.status())).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",r.workedMinutes())
-                    .param("overtime",r.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update();
+                    .param("status",evaluated.status()).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",evaluated.workedMinutes())
+                    .param("overtime",evaluated.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update();
             if(count==0)throw missing("Attendance record");
         } catch(DataIntegrityViolationException e){throw conflict("Attendance already exists or references another company");}
         UUID saved=id; return attendance(r.attendanceDate(),r.attendanceDate(),r.employmentId()).stream().filter(a->a.id().equals(saved)).findFirst().orElseThrow();
@@ -121,6 +140,31 @@ public class AttendanceService {
                 .param("tenant",tenant()).param("month",month.atDay(1)).update();
         if(count==0)throw missing("Attendance month lock");
     }
+
+    private EvaluatedAttendance evaluate(SaveAttendanceRequest request) {
+        if (request.shiftId() == null
+                || (request.checkIn() == null && request.checkOut() == null)) {
+            return new EvaluatedAttendance(
+                    normalize(request.status()),
+                    request.workedMinutes(),
+                    request.overtimeMinutes()
+            );
+        }
+
+        AttendanceEvaluation result = evaluationService.evaluate(
+                shift(request.shiftId()),
+                request.attendanceDate(),
+                request.checkIn(),
+                request.checkOut(),
+                java.time.ZoneId.systemDefault()
+        );
+
+        return new EvaluatedAttendance(
+                result.status(), result.workedMinutes(), result.overtimeMinutes()
+        );
+    }
+
+    private record EvaluatedAttendance(String status, Integer workedMinutes, int overtimeMinutes) {}
 
     private WorkShift shift(UUID id){return shifts(null).stream().filter(s->s.id().equals(id)).findFirst().orElseThrow(()->missing("Shift"));}
     private AttendanceMonthLock monthLock(LocalDate month){return db.sql("SELECT attendance_month,locked_by,locked_at FROM attendance_month_lock WHERE tenant_id=:tenant AND attendance_month=:month")
