@@ -87,7 +87,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add employee administration screens
 - [x] Add employee document metadata and tenant-separated storage abstraction
 - [x] Add employee document upload, listing and download APIs
-- [ ] Configure a durable production object-storage adapter
+- [x] Add a durable Supabase Storage adapter and server-only configuration
+- [ ] Provision the private document bucket and storage credentials in the deployed environment
 
 ## Verification history
 
@@ -110,6 +111,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | `npm.cmd run build` after employee administration UI | PASS - TypeScript and Vite production build; Node upgrade warning remains |
 | 2026-09-04 | Supabase Flyway migration V4 retry with reduced application pool | BLOCKED - Supabase session pool remains at its 15-client limit |
 | 2026-09-04 | `mvn clean verify` after employee document APIs | PASS - 14 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-04 | `mvn clean verify` after Supabase Storage adapter | PASS - 15 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 

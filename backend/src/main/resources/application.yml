@@ -32,4 +32,9 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   storage:
+    provider: ${DOCUMENT_STORAGE_PROVIDER:filesystem}
     employee-documents-root: ${EMPLOYEE_DOCUMENTS_ROOT:./data/employee-documents}
+    supabase:
+      url: ${SUPABASE_URL:}
+      service-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+      bucket: ${SUPABASE_DOCUMENT_BUCKET:employee-documents}

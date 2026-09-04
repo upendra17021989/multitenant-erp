@@ -1,6 +1,7 @@
 package com.multitenanterp.employee;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 @Component
+@ConditionalOnProperty(name="app.storage.provider",havingValue="filesystem",matchIfMissing=true)
 public class FileSystemDocumentStorage implements DocumentStorage {
     private final Path root;
 

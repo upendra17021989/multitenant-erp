@@ -56,5 +56,11 @@ Configure these Cloud Run runtime variables in **Edit and deploy new revision > 
 - `SUPABASE_JWT_ISSUER`: `https://YOUR_PROJECT_REF.supabase.co/auth/v1`
 - `SUPABASE_JWKS_URL`: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/.well-known/jwks.json`
 - `CORS_ALLOWED_ORIGINS`: comma-separated Vercel origins, for example `https://example.vercel.app,https://example.com`
+- `DOCUMENT_STORAGE_PROVIDER`: `supabase` in deployed environments (`filesystem` is the local default)
+- `SUPABASE_URL`: Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY`: server-only secret used by the backend for private document storage
+- `SUPABASE_DOCUMENT_BUCKET`: private bucket name, default `employee-documents`
+
+Create the document bucket as private in Supabase Storage. The service-role key belongs only in Cloud Run/Secret Manager and must never use a `VITE_` prefix or be exposed to the browser.
 
 Cloud Run supplies `PORT` automatically. The application reads it through `server.port`. The local `backend/.env` file is optional and is excluded from the container image.
