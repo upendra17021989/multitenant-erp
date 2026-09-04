@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Alert, AppBar, Box, Button, Chip, CircularProgress, Container, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Toolbar, Typography } from '@mui/material'
+import { Alert, AppBar, Box, Button, Chip, CircularProgress, Container, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Tab, Tabs, TextField, Toolbar, Typography } from '@mui/material'
 import { loadTenantMemberships, type TenantMembership } from './api'
 import { supabase, supabaseConfigurationMissing } from './supabase'
 import OrganizationAdmin from './OrganizationAdmin'
+import EmployeeAdmin from './EmployeeAdmin'
 
 const ACTIVE_TENANT_KEY = 'erp.activeTenantId'
 
@@ -16,6 +17,7 @@ export default function App() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [module, setModule] = useState<'organization' | 'employees'>('organization')
 
   useEffect(() => {
     if (!supabase) {
@@ -53,6 +55,8 @@ export default function App() {
     () => memberships.find((item) => item.tenantId === activeTenantId),
     [activeTenantId, memberships],
   )
+  const canViewEmployees = activeMembership?.roles.some((role) =>
+    ['SYSTEM_ADMIN', 'GROUP_ADMIN', 'COMPANY_ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER'].includes(role)) ?? false
 
   async function signIn(event: FormEvent) {
     event.preventDefault()
@@ -118,7 +122,15 @@ export default function App() {
             {activeMembership.roles.map((role) => <Chip key={role} label={role} color="primary" variant="outlined" />)}
           </Stack> : <Typography color="text.secondary">Your account is authenticated but has not been assigned to an active company.</Typography>}
         </Paper>
-        {activeMembership && <OrganizationAdmin session={session} membership={activeMembership} />}
+        {activeMembership && <>
+          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees') => setModule(value)}>
+            <Tab value="organization" label="Organisation" />
+            {canViewEmployees && <Tab value="employees" label="Employees" />}
+          </Tabs></Paper>
+          {module === 'organization' || !canViewEmployees
+            ? <OrganizationAdmin session={session} membership={activeMembership} />
+            : <EmployeeAdmin session={session} membership={activeMembership} />}
+        </>}
       </Stack>}
     </Container>
   </Box>
