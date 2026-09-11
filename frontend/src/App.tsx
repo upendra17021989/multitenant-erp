@@ -6,6 +6,7 @@ import { supabase, supabaseConfigurationMissing } from './supabase'
 import OrganizationAdmin from './OrganizationAdmin'
 import EmployeeAdmin from './EmployeeAdmin'
 import AttendanceAdmin from './AttendanceAdmin'
+import LeaveAdmin from './LeaveAdmin'
 
 const ACTIVE_TENANT_KEY = 'erp.activeTenantId'
 
@@ -18,7 +19,7 @@ export default function App() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [module, setModule] = useState<'organization' | 'employees' | 'attendance'>('organization')
+  const [module, setModule] = useState<'organization' | 'employees' | 'attendance' | 'leave'>('organization')
 
   useEffect(() => {
     if (!supabase) {
@@ -94,7 +95,7 @@ export default function App() {
         {error && <Alert severity="error">{error}</Alert>}
         <TextField label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         <TextField label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
-        <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Signing inâ€¦' : 'Sign in'}</Button>
+        <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Signing inÃ¢â‚¬Â¦' : 'Sign in'}</Button>
       </Stack>
     </Paper>
   </Container>
@@ -124,14 +125,15 @@ export default function App() {
           </Stack> : <Typography color="text.secondary">Your account is authenticated but has not been assigned to an active company.</Typography>}
         </Paper>
         {activeMembership && <>
-          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees' | 'attendance') => setModule(value)}>
+          <Paper><Tabs value={module} onChange={(_event, value: 'organization' | 'employees' | 'attendance' | 'leave') => setModule(value)}>
             <Tab value="organization" label="Organisation" />
             {canViewEmployees && <Tab value="employees" label="Employees" />}
-            {canViewEmployees && <Tab value="attendance" label="Attendance" />}
+            {canViewEmployees && <Tab value="attendance" label="Attendance" />}`r`n            {canViewEmployees && <Tab value="leave" label="Leave" />}
           </Tabs></Paper>
           {(module === 'organization' || !canViewEmployees) && <OrganizationAdmin session={session} membership={activeMembership} />}
           {module === 'employees' && canViewEmployees && <EmployeeAdmin session={session} membership={activeMembership} />}
           {module === 'attendance' && canViewEmployees && <AttendanceAdmin session={session} membership={activeMembership} />}
+          {module === 'leave' && canViewEmployees && <LeaveAdmin session={session} membership={activeMembership} />}
         </>}
       </Stack>}
     </Container>
