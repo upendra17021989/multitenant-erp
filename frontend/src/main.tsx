@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
-import App from './App'
+import App from './WorkforceApp'
 
 const theme = createTheme({
   palette: { primary: { main: '#2457a6' }, background: { default: '#f4f7fb' } },
