@@ -1,0 +1,3 @@
+package com.multitenanterp.payroll;
+import jakarta.validation.constraints.*;import java.math.BigDecimal;import java.time.LocalDate;
+public record SaveSalaryComponentRequest(@NotBlank String code,@NotBlank String name,@NotBlank String componentType,@NotBlank String calculationType,String calculationBaseCode,@NotNull @DecimalMin("0") BigDecimal defaultValue,boolean taxable,boolean pfApplicable,boolean esiApplicable,boolean prorated,boolean includedInGross,boolean includedInCtc,boolean includedInNet,@Min(0) @Max(4) int roundingScale,@NotNull LocalDate effectiveFrom,LocalDate effectiveTo,String status){}

@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/attendanceadmin.tsx","./src/employeeadmin.tsx","./src/leaveadmin.tsx","./src/organizationadmin.tsx","./src/workforceapp.tsx","./src/api.ts","./src/main.tsx","./src/supabase.ts","./src/vite-env.d.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/attendanceadmin.tsx","./src/employeeadmin.tsx","./src/leaveadmin.tsx","./src/organizationadmin.tsx","./src/payrollstructureadmin.tsx","./src/workforceapp.tsx","./src/api.ts","./src/main.tsx","./src/supabase.ts","./src/vite-env.d.ts"],"version":"5.9.3"}
