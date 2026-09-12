@@ -1,0 +1,7 @@
+package com.multitenanterp.payroll;
+import org.junit.jupiter.api.Test;import java.math.BigDecimal;import java.time.*;import static org.assertj.core.api.Assertions.*;
+class PayrollProrationCalculatorTest{
+ @Test void proratesJoinerUnpaidLeaveAndAbsence(){PayrollProration result=PayrollProrationCalculator.calculate(YearMonth.of(2026,9),"CALENDAR_DAYS",LocalDate.of(2026,9,11),null,new BigDecimal("2"),new BigDecimal("0.5"),180);assertThat(result.periodDays()).isEqualByComparingTo("30");assertThat(result.eligibleDays()).isEqualByComparingTo("20");assertThat(result.payableDays()).isEqualByComparingTo("17.5");assertThat(result.factor()).isEqualByComparingTo("0.58333333");assertThat(result.overtimeMinutes()).isEqualTo(180);}
+ @Test void fixedThirtyUsesFullPeriodForContinuingEmployee(){PayrollProration result=PayrollProrationCalculator.calculate(YearMonth.of(2026,2),"FIXED_30",LocalDate.of(2020,1,1),null,BigDecimal.ONE,BigDecimal.ZERO,0);assertThat(result.periodDays()).isEqualByComparingTo("30");assertThat(result.eligibleDays()).isEqualByComparingTo("30");assertThat(result.payableDays()).isEqualByComparingTo("29");}
+ @Test void neverProducesNegativePayableDays(){PayrollProration result=PayrollProrationCalculator.calculate(YearMonth.of(2026,9),"CALENDAR_DAYS",LocalDate.of(2026,9,30),null,BigDecimal.TEN,BigDecimal.TEN,-5);assertThat(result.payableDays()).isZero();assertThat(result.factor()).isZero();assertThat(result.overtimeMinutes()).isZero();}
+}

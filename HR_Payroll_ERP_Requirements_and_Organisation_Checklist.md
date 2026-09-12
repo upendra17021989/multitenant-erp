@@ -555,8 +555,9 @@ Completed and verified:
 Still pending for monthly payroll processing:
 
 - [x] Safe formula evaluation and component dependency ordering
-- [ ] Attendance and unpaid-leave proration calculations
-- [ ] Joiner, leaver, overtime, incentive and arrears calculations
+- [x] Attendance and unpaid-leave proration calculations
+- [x] Joiner, leaver and overtime calculations
+- [ ] Incentive and arrears calculations
 - [ ] PF, ESI, PT, LWF, TDS, gratuity and bonus calculation engines
 - [ ] Variable earning/deduction imports
 - [ ] Draft payroll calculation, exception review and variance comparison
@@ -570,6 +571,16 @@ Initial monthly-payroll implementation completed on 2026-09-12:
 - [x] Tenant-scoped, reproducible payroll-run and employee/component snapshots
 - [x] Draft calculation and retrieval APIs
 - [x] Unknown-reference, circular-dependency and invalid-formula rejection
+
+Payroll proration implementation completed on 2026-09-12:
+
+- [x] Calendar-day and fixed-30-day proration
+- [x] Joining and exit-date partial-month eligibility
+- [x] Approved unpaid-leave and attendance absence deductions
+- [x] Overtime hours exposed to salary formulas through `OVERTIME_HOURS`
+- [x] Period, eligible, unpaid, absent, payable days, factor and overtime snapshot per employee
+
+Operational note: overtime currently uses the tenant-scoped minutes stored on attendance records. A separate overtime approval workflow remains pending in the attendance phase and must be completed before production payroll activation.
 
 ---
 ## 9. Indian Statutory and Compliance Requirements

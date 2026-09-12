@@ -132,7 +132,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Resolve effective-dated salary assignments and component configuration
 - [x] Persist reproducible tenant-scoped draft payroll snapshots
 - [x] Add calculate and retrieve payroll-run APIs
-- [ ] Add attendance, unpaid-leave, joiner/leaver and overtime proration
+- [x] Add attendance, unpaid-leave, joiner/leaver and overtime proration
+- [x] Persist payable-day and overtime inputs with every employee payroll snapshot
 - [ ] Add statutory calculations and variable-input imports
 - [ ] Add exception review, variance, approval, lock, reopen and reversal workflow
 
@@ -165,6 +166,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | `mvn test` after CSV attendance import | PASS - 21 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-04 | `npm.cmd run build` after attendance administration UI | PASS - TypeScript and Vite production build; bundle-size warning remains |
 | 2026-09-12 | `mvn test` after initial monthly payroll calculation engine | PASS - 30 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-12 | `mvn test` after payroll proration and overtime inputs | PASS - 33 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 
