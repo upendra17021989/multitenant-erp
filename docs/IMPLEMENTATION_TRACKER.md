@@ -16,7 +16,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M05 | Attendance, shifts and holidays | IN PROGRESS |
 | M06 | Leave management | IN PROGRESS |
 | M07 | Salary structure and rules engine | DONE |
-| M08 | Statutory calculation framework | BACKLOG |
+| M08 | Statutory calculation framework | IN PROGRESS |
 | M09 | Monthly payroll workflow | IN PROGRESS |
 | M10 | Payslips and secure delivery | BACKLOG |
 | M11 | Reports, exports and dashboards | BACKLOG |
@@ -134,7 +134,12 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add calculate and retrieve payroll-run APIs
 - [x] Add attendance, unpaid-leave, joiner/leaver and overtime proration
 - [x] Persist payable-day and overtime inputs with every employee payroll snapshot
-- [ ] Add statutory calculations and variable-input imports
+- [x] Add tenant-scoped, effective-dated statutory rule configuration
+- [x] Add configurable PF/ESI-style percentage, eligibility-ceiling and contribution-cap calculations
+- [x] Add tenant-scoped monthly variable earning and deduction inputs
+- [x] Include statutory and variable adjustments in payroll totals and reproducible snapshots
+- [ ] Add approved PT, LWF, TDS, gratuity and bonus rule implementations
+- [ ] Add CSV variable-input import and row-level validation
 - [ ] Add exception review, variance, approval, lock, reopen and reversal workflow
 
 ## Verification history
@@ -167,6 +172,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | `npm.cmd run build` after attendance administration UI | PASS - TypeScript and Vite production build; bundle-size warning remains |
 | 2026-09-12 | `mvn test` after initial monthly payroll calculation engine | PASS - 30 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after payroll proration and overtime inputs | PASS - 33 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-12 | `mvn test` after statutory rules and variable payroll inputs | PASS - 37 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 

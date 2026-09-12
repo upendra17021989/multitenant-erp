@@ -1,8 +1,8 @@
-# HR & Payroll ERP Ã¢â‚¬â€ Requirements and Organisation Checklist
+# HR & Payroll ERP - Requirements and Organisation Checklist
 
 **Document purpose:** Collect and approve the business information required to design and build the first HR and Payroll module of the ERP.
 
-**Recommended first release:** Organisation setup Ã¢â€ â€™ Employee master Ã¢â€ â€™ Attendance Ã¢â€ â€™ Leave Ã¢â€ â€™ Salary structure Ã¢â€ â€™ Monthly payroll Ã¢â€ â€™ Payslip Ã¢â€ â€™ Reports.
+**Recommended first release:** Organisation setup -> Employee master -> Attendance -> Leave -> Salary structure -> Monthly payroll -> Payslip -> Reports.
 
 > This document should be completed jointly by HR, Payroll/Accounts, Management, IT, and the implementation team. Items marked **Required before development** should be finalized before related screens or calculations are built.
 
@@ -56,7 +56,7 @@ Define measurable outcomes, for example: payroll completed within two working da
 
 ## 2. Scope and Release Plan
 
-### Phase 1 Ã¢â‚¬â€ Recommended MVP
+### Phase 1 - Recommended MVP
 
 - [ ] Login and password management
 - [ ] Role-based access and permissions
@@ -70,7 +70,7 @@ Define measurable outcomes, for example: payroll completed within two working da
 - [ ] Payroll, attendance and leave reports
 - [ ] Audit history
 
-### Phase 2 Ã¢â‚¬â€ Optional
+### Phase 2 - Optional
 
 - [ ] Biometric attendance integration
 - [ ] Mobile attendance/geofencing
@@ -153,7 +153,7 @@ The solution must allow additional companies to be added later without changing 
 - Tenant filtering must be enforced in backend authorization and data access; it must not rely only on a company selector in the frontend.
 - Uploaded employee documents and generated payslips must be stored in tenant-separated paths or storage boundaries.
 - Cache entries, background jobs, imports, exports, notifications and generated reports must preserve tenant context.
-- Database constraints and unique identifiers must be tenant-aware where appropriateÃ¢â‚¬â€for example, the same employee code may exist in different companies.
+- Database constraints and unique identifiers must be tenant-aware where appropriate - for example, the same employee code may exist in different companies.
 - Logs and audit records must record the acting user, selected tenant, affected tenant and action.
 - Backups and restoration procedures must prevent one tenant's restored data from overwriting or exposing another tenant's data.
 - Automated security tests must verify that users cannot access another tenant by changing a URL, request parameter, API payload or record ID.
@@ -559,7 +559,7 @@ Still pending for monthly payroll processing:
 - [x] Joiner, leaver and overtime calculations
 - [ ] Incentive and arrears calculations
 - [ ] PF, ESI, PT, LWF, TDS, gratuity and bonus calculation engines
-- [ ] Variable earning/deduction imports
+- [x] Variable earning/deduction API inputs; CSV bulk import remains pending
 - [ ] Draft payroll calculation, exception review and variance comparison
 - [ ] Maker-checker approval, lock, reopen, reversal and payment workflow
 - [ ] Validation against the ten approved organisation calculation examples
@@ -581,6 +581,17 @@ Payroll proration implementation completed on 2026-09-12:
 - [x] Period, eligible, unpaid, absent, payable days, factor and overtime snapshot per employee
 
 Operational note: overtime currently uses the tenant-scoped minutes stored on attendance records. A separate overtime approval workflow remains pending in the attendance phase and must be completed before production payroll activation.
+
+Initial statutory and variable-input implementation completed on 2026-09-12:
+
+- [x] Tenant-scoped statutory rules with effective dates and draft/active/inactive status
+- [x] Gross or selected-component calculation bases
+- [x] Percentage rates, eligibility ceilings, contribution caps and configurable rounding
+- [x] PF/ESI-style employee deductions and employer contributions
+- [x] Monthly employee variable earnings and deductions
+- [x] Statutory and variable results retained separately in the payroll snapshot and included in totals
+
+PT, LWF, TDS, gratuity and bonus remain pending until the organisation supplies approved applicability, location rules, rates, thresholds and calculation examples.
 
 ---
 ## 9. Indian Statutory and Compliance Requirements
@@ -620,7 +631,7 @@ Confirm the desired monthly workflow:
 
 ### Payroll statuses
 
-Recommended: `DRAFT` Ã¢â€ â€™ `CALCULATED` Ã¢â€ â€™ `UNDER_REVIEW` Ã¢â€ â€™ `APPROVED` Ã¢â€ â€™ `LOCKED` Ã¢â€ â€™ `PAID`.
+Recommended: `DRAFT` -> `CALCULATED` -> `UNDER_REVIEW` -> `APPROVED` -> `LOCKED` -> `PAID`.
 
 Questions:
 
@@ -833,7 +844,7 @@ The organisation should nominate users from HR, Payroll, Finance, Management, Ma
 
 ---
 
-## 19. Required Inputs Ã¢â‚¬â€ Quick Handover Checklist
+## 19. Required Inputs - Quick Handover Checklist
 
 Ask the organisation to provide these before estimation and development are finalized:
 
