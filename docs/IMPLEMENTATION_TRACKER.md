@@ -139,7 +139,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add tenant-scoped monthly variable earning and deduction inputs
 - [x] Include statutory and variable adjustments in payroll totals and reproducible snapshots
 - [ ] Add approved PT, LWF, TDS, gratuity and bonus rule implementations
-- [ ] Add CSV variable-input import and row-level validation
+- [x] Add CSV variable-input import with tenant-safe employee resolution and row-level validation
 - [ ] Add exception review, variance, approval, lock, reopen and reversal workflow
 
 ## Verification history
@@ -173,6 +173,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-12 | `mvn test` after initial monthly payroll calculation engine | PASS - 30 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after payroll proration and overtime inputs | PASS - 33 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after statutory rules and variable payroll inputs | PASS - 37 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-12 | `mvn test` after variable-input CSV import | PASS - 39 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 
