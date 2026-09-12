@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-04
+Last updated: 2026-09-12
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -14,10 +14,10 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M03 | Tenant onboarding and organisation masters | DONE |
 | M04 | Employee master and documents | IN PROGRESS |
 | M05 | Attendance, shifts and holidays | IN PROGRESS |
-| M06 | Leave management | BACKLOG |
-| M07 | Salary structure and rules engine | BACKLOG |
+| M06 | Leave management | IN PROGRESS |
+| M07 | Salary structure and rules engine | DONE |
 | M08 | Statutory calculation framework | BACKLOG |
-| M09 | Monthly payroll workflow | BACKLOG |
+| M09 | Monthly payroll workflow | IN PROGRESS |
 | M10 | Payslips and secure delivery | BACKLOG |
 | M11 | Reports, exports and dashboards | BACKLOG |
 | M12 | Migration framework | BACKLOG |
@@ -109,6 +109,33 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add attendance administration screens
 - [ ] Add attendance summaries and exception reports
 
+## M06 checklist
+
+- [x] Add tenant-scoped leave types, balances, requests and decisions
+- [x] Add leave administration screens and tenant-isolation tests
+- [ ] Add automated accrual, carry-forward and special-policy processing
+- [ ] Add configurable approval chains, reports, notifications and audit history
+- [ ] Integrate approved unpaid leave with payroll
+
+## M07 checklist
+
+- [x] Add tenant-scoped payroll settings and salary components
+- [x] Add effective-dated salary structures and component lines
+- [x] Add employee salary assignment and revision history
+- [x] Add salary configuration screens and tenant-isolation tests
+
+## M09 checklist
+
+- [x] Add safe arithmetic formula evaluation and dependency ordering
+- [x] Reject unknown and circular component dependencies
+- [x] Calculate gross, deductions, employer contributions, net pay and CTC
+- [x] Resolve effective-dated salary assignments and component configuration
+- [x] Persist reproducible tenant-scoped draft payroll snapshots
+- [x] Add calculate and retrieve payroll-run APIs
+- [ ] Add attendance, unpaid-leave, joiner/leaver and overtime proration
+- [ ] Add statutory calculations and variable-input imports
+- [ ] Add exception review, variance, approval, lock, reopen and reversal workflow
+
 ## Verification history
 
 | Date | Check | Result |
@@ -137,6 +164,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-04 | `mvn test` after attendance evaluation | PASS - 19 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-04 | `mvn test` after CSV attendance import | PASS - 21 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-04 | `npm.cmd run build` after attendance administration UI | PASS - TypeScript and Vite production build; bundle-size warning remains |
+| 2026-09-12 | `mvn test` after initial monthly payroll calculation engine | PASS - 30 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 

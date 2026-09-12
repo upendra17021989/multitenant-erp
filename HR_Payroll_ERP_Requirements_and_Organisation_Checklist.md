@@ -554,7 +554,7 @@ Completed and verified:
 
 Still pending for monthly payroll processing:
 
-- [ ] Safe formula evaluation and component dependency ordering
+- [x] Safe formula evaluation and component dependency ordering
 - [ ] Attendance and unpaid-leave proration calculations
 - [ ] Joiner, leaver, overtime, incentive and arrears calculations
 - [ ] PF, ESI, PT, LWF, TDS, gratuity and bonus calculation engines
@@ -562,6 +562,14 @@ Still pending for monthly payroll processing:
 - [ ] Draft payroll calculation, exception review and variance comparison
 - [ ] Maker-checker approval, lock, reopen, reversal and payment workflow
 - [ ] Validation against the ten approved organisation calculation examples
+
+Initial monthly-payroll implementation completed on 2026-09-12:
+
+- [x] Effective-dated employee salary assignment resolution
+- [x] Gross, deduction, employer-contribution, net-pay and CTC totals
+- [x] Tenant-scoped, reproducible payroll-run and employee/component snapshots
+- [x] Draft calculation and retrieval APIs
+- [x] Unknown-reference, circular-dependency and invalid-formula rejection
 
 ---
 ## 9. Indian Statutory and Compliance Requirements
