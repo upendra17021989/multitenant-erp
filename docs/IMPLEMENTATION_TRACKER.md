@@ -140,7 +140,11 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Include statutory and variable adjustments in payroll totals and reproducible snapshots
 - [ ] Add approved PT, LWF, TDS, gratuity and bonus rule implementations
 - [x] Add CSV variable-input import with tenant-safe employee resolution and row-level validation
-- [ ] Add exception review, variance, approval, lock, reopen and reversal workflow
+- [x] Add persisted payroll exceptions and resolution audit fields
+- [x] Detect missing salary assignments, negative/zero net pay and zero payable days
+- [x] Add previous-month employee gross/net variance comparison
+- [x] Add controlled calculated-to-under-review transition with unresolved-error gate
+- [ ] Add maker-checker approval, lock, reopen and reversal workflow
 
 ## Verification history
 
@@ -174,6 +178,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-12 | `mvn test` after payroll proration and overtime inputs | PASS - 33 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after statutory rules and variable payroll inputs | PASS - 37 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after variable-input CSV import | PASS - 39 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-12 | `mvn test` after payroll exceptions, variance and review transition | PASS - 41 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 

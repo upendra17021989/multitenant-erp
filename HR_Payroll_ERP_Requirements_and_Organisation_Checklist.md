@@ -560,7 +560,7 @@ Still pending for monthly payroll processing:
 - [ ] Incentive and arrears calculations
 - [ ] PF, ESI, PT, LWF, TDS, gratuity and bonus calculation engines
 - [x] Variable earning/deduction API inputs and CSV bulk import
-- [ ] Draft payroll calculation, exception review and variance comparison
+- [x] Draft payroll calculation, exception review and variance comparison
 - [ ] Maker-checker approval, lock, reopen, reversal and payment workflow
 - [ ] Validation against the ten approved organisation calculation examples
 
@@ -593,6 +593,14 @@ Initial statutory and variable-input implementation completed on 2026-09-12:
 - [x] Statutory and variable results retained separately in the payroll snapshot and included in totals
 
 PT, LWF, TDS, gratuity and bonus remain pending until the organisation supplies approved applicability, location rules, rates, thresholds and calculation examples.
+
+Payroll review controls implemented on 2026-09-12:
+
+- [x] Persisted employee-level payroll exceptions with severity and resolution audit details
+- [x] Missing salary assignment, negative net pay, zero net pay and zero payable-day checks
+- [x] Previous-month gross and net variance with new and exited employee identification
+- [x] Review transition blocked while unresolved error-level exceptions remain
+- [x] Payroll Manager or higher role required to start review
 
 ---
 ## 9. Indian Statutory and Compliance Requirements
