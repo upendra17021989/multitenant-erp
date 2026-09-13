@@ -1,0 +1,26 @@
+CREATE TABLE payslip (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    payroll_run_id UUID NOT NULL,
+    payroll_employee_result_id UUID NOT NULL,
+    employment_id UUID NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    storage_key VARCHAR(500) NOT NULL,
+    content_type VARCHAR(100) NOT NULL DEFAULT 'application/pdf',
+    size_bytes BIGINT NOT NULL,
+    sha256 VARCHAR(64) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'GENERATED',
+    generated_by VARCHAR(255) NOT NULL,
+    generated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    released_by VARCHAR(255),
+    released_at TIMESTAMPTZ,
+    CONSTRAINT uq_payslip_run_employee UNIQUE(tenant_id,payroll_run_id,employment_id),
+    CONSTRAINT uq_payslip_storage_key UNIQUE(storage_key),
+    CONSTRAINT uq_payslip_id_tenant UNIQUE(id,tenant_id),
+    CONSTRAINT fk_payslip_run FOREIGN KEY(payroll_run_id,tenant_id) REFERENCES payroll_run(id,tenant_id),
+    CONSTRAINT fk_payslip_result FOREIGN KEY(payroll_employee_result_id,tenant_id) REFERENCES payroll_employee_result(id,tenant_id),
+    CONSTRAINT fk_payslip_employee FOREIGN KEY(employment_id,tenant_id) REFERENCES employment(id,tenant_id),
+    CONSTRAINT ck_payslip_status CHECK(status IN ('GENERATED','RELEASED')),
+    CONSTRAINT ck_payslip_size CHECK(size_bytes > 0)
+);
+CREATE INDEX ix_payslip_tenant_period ON payslip(tenant_id,payroll_run_id,status);

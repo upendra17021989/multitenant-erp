@@ -18,7 +18,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M07 | Salary structure and rules engine | DONE |
 | M08 | Statutory calculation framework | IN PROGRESS |
 | M09 | Monthly payroll workflow | DONE |
-| M10 | Payslips and secure delivery | BACKLOG |
+| M10 | Payslips and secure delivery | IN PROGRESS |
 | M11 | Reports, exports and dashboards | BACKLOG |
 | M12 | Migration framework | BACKLOG |
 | M13 | Security hardening and UAT | BACKLOG |
@@ -146,6 +146,20 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add controlled calculated-to-under-review transition with unresolved-error gate
 - [x] Add maker-checker approval, lock, reopen and reversal workflow
 
+## M10 checklist
+
+- [x] Add tenant-scoped payslip metadata and immutable payroll-result linkage
+- [x] Generate branded PDF payslips from locked or paid payroll snapshots
+- [x] Store generated payslips in tenant-separated object-storage paths
+- [x] Persist content size and SHA-256 integrity metadata
+- [x] Add explicit generated-to-released delivery control
+- [x] Add role-protected payslip list, generation, release and download APIs
+- [x] Add PDF content, rendering and tenant-isolation tests
+- [ ] Link application users to employments for employee self-service authorization
+- [ ] Add employee self-service payslip list and download screens
+- [ ] Add payroll-administration payslip generation and release screens
+- [ ] Add optional email delivery, delivery audit and employee acknowledgement
+
 ## Verification history
 
 | Date | Check | Result |
@@ -181,6 +195,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-12 | `mvn test` after payroll exceptions, variance and review transition | PASS - 41 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-13 | `mvn test` after payroll approval, lock, reopen and reversal workflow | PASS - 43 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-13 | `npm.cmd --prefix frontend run build` after payroll approval workflow | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
+| 2026-09-13 | Payslip PDF text extraction and 144-DPI raster inspection | PASS - one-page layout is legible, aligned and unclipped |
+| 2026-09-13 | `mvn test` after initial payslip generation and secure delivery slice | PASS - 46 tests, 0 failures, 1 environment-dependent test skipped |
 
 ## Definition of done
 
