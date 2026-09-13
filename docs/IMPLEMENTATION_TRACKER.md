@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-12
+Last updated: 2026-09-13
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -17,7 +17,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | M06 | Leave management | IN PROGRESS |
 | M07 | Salary structure and rules engine | DONE |
 | M08 | Statutory calculation framework | IN PROGRESS |
-| M09 | Monthly payroll workflow | IN PROGRESS |
+| M09 | Monthly payroll workflow | DONE |
 | M10 | Payslips and secure delivery | BACKLOG |
 | M11 | Reports, exports and dashboards | BACKLOG |
 | M12 | Migration framework | BACKLOG |
@@ -144,7 +144,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Detect missing salary assignments, negative/zero net pay and zero payable days
 - [x] Add previous-month employee gross/net variance comparison
 - [x] Add controlled calculated-to-under-review transition with unresolved-error gate
-- [ ] Add maker-checker approval, lock, reopen and reversal workflow
+- [x] Add maker-checker approval, lock, reopen and reversal workflow
 
 ## Verification history
 
@@ -179,6 +179,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-12 | `mvn test` after statutory rules and variable payroll inputs | PASS - 37 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after variable-input CSV import | PASS - 39 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-12 | `mvn test` after payroll exceptions, variance and review transition | PASS - 41 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-13 | `mvn test` after payroll approval, lock, reopen and reversal workflow | PASS - 43 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-13 | `npm.cmd --prefix frontend run build` after payroll approval workflow | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
 
 ## Definition of done
 
