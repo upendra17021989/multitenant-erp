@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.Set;
 import java.nio.file.Path;
 import java.io.ByteArrayOutputStream;
 
@@ -26,6 +27,7 @@ class EmployeeTenantIsolationIntegrationTest {
     private EmployeeService service;
     private EmployeeDocumentService documents;
     private EmployeeExcelImportService importer;
+    private EmployeeUserLinkService userLinks;
     private JdbcClient db;
     @TempDir Path storageRoot;
 
@@ -38,6 +40,7 @@ class EmployeeTenantIsolationIntegrationTest {
         db.sql("INSERT INTO tenant(id) VALUES(?),(?)").params(tenantA, tenantB).update();
         service = new EmployeeService(dataSource);
         importer = new EmployeeExcelImportService(db, service);
+        userLinks = new EmployeeUserLinkService(db);
         documents = new EmployeeDocumentService(db, new FileSystemDocumentStorage(storageRoot.toString()));
     }
 
@@ -130,6 +133,27 @@ class EmployeeTenantIsolationIntegrationTest {
     }
 
     @Test
+    void userEmploymentLinksAreTenantScopedAndResolveTheCurrentEmployee() {
+        UUID appUser=UUID.randomUUID(),authUser=UUID.randomUUID();
+        db.sql("INSERT INTO app_user(id,auth_user_id,email,status) VALUES(?,?,?,?)").params(appUser,authUser,"employee@example.com","ACTIVE").update();
+        db.sql("INSERT INTO user_tenant_role(id,tenant_id,user_id,role_code) VALUES(?,?,?,?)").params(UUID.randomUUID(),tenantA,appUser,"EMPLOYEE").update();
+        TenantContext.set(tenantA);
+        Employee employee=service.create(request("SELF001","Self",null));
+
+        EmployeeUserLink link=userLinks.link(employee.id(),"EMPLOYEE@EXAMPLE.COM","admin@example.com");
+        assertThat(link.employmentId()).isEqualTo(employee.id());
+        assertThat(link.userEmail()).isEqualTo("employee@example.com");
+
+        TenantContext.set(authUser,tenantA,Set.of("EMPLOYEE"));
+        assertThat(userLinks.currentEmploymentId()).isEqualTo(employee.id());
+        assertThat(userLinks.isCurrentEmployee(employee.id())).isTrue();
+
+        TenantContext.set(authUser,tenantB,Set.of("EMPLOYEE"));
+        assertThat(userLinks.links()).isEmpty();
+        assertThat(userLinks.isCurrentEmployee(employee.id())).isFalse();
+    }
+
+    @Test
     void employeeDocumentsUseTenantScopedMetadataAndStorageKeys() throws Exception {
         TenantContext.set(tenantA);
         Employee employee = service.create(request("DOC001", "Document", null));
@@ -165,6 +189,8 @@ class EmployeeTenantIsolationIntegrationTest {
 
     private void createSchema() {
         db.sql("CREATE TABLE tenant(id UUID PRIMARY KEY)").update();
+        db.sql("CREATE TABLE app_user(id UUID PRIMARY KEY,auth_user_id UUID UNIQUE,email VARCHAR(320),status VARCHAR(20))").update();
+        db.sql("CREATE TABLE user_tenant_role(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,user_id UUID NOT NULL,role_code VARCHAR(80),revoked_at TIMESTAMP)").update();
         db.sql("CREATE TABLE branch(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE department(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE designation(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
@@ -185,6 +211,7 @@ class EmployeeTenantIsolationIntegrationTest {
                 FOREIGN KEY(person_id,tenant_id) REFERENCES person(id,tenant_id),
                 FOREIGN KEY(branch_id,tenant_id) REFERENCES branch(id,tenant_id))
                 """).update();
+        db.sql("CREATE TABLE employee_user_link(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,user_id UUID NOT NULL,employment_id UUID NOT NULL,linked_by VARCHAR(320),linked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,UNIQUE(tenant_id,user_id),UNIQUE(tenant_id,employment_id),FOREIGN KEY(employment_id,tenant_id) REFERENCES employment(id,tenant_id))").update();
         db.sql("CREATE TABLE employee_document(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,employment_id UUID NOT NULL,document_type VARCHAR(40),file_name VARCHAR(255),content_type VARCHAR(150),size_bytes BIGINT,storage_key VARCHAR(500) UNIQUE,uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY(employment_id,tenant_id) REFERENCES employment(id,tenant_id))").update();
     }
 }

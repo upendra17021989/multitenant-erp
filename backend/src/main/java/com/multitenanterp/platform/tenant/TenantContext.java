@@ -19,8 +19,16 @@ public final class TenantContext {
         return Optional.ofNullable(ACTIVE_TENANT.get()).map(AuthorizedTenant::tenantId);
     }
 
+    public static Optional<UUID> currentAuthUserId() {
+        return Optional.ofNullable(ACTIVE_TENANT.get()).map(AuthorizedTenant::authUserId);
+    }
+
     public static UUID requireTenantId() {
         return currentTenantId().orElseThrow(() -> new MissingTenantException("No active tenant context"));
+    }
+
+    public static UUID requireAuthUserId() {
+        return currentAuthUserId().orElseThrow(() -> new MissingTenantException("No authenticated user context"));
     }
 
     public static void clear() { ACTIVE_TENANT.remove(); }

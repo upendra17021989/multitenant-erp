@@ -456,6 +456,8 @@ Still pending in the leave phase:
 - [ ] Employee self-service restriction to the authenticated employee record
 - [ ] Leave reports, notifications and full audit/change history
 
+Employee-to-user linking for tenant-scoped self-service authorization was completed on 2026-09-15. Applying that identity restriction to leave requests remains pending.
+
 ---
 ## 8. Salary Structure and Payroll Rules
 

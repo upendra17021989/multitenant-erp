@@ -11,6 +11,7 @@ type Option = { id: string; name?: string; title?: string; employeeNumber?: stri
 type Field = { key: string; label: string; type?: 'date' | 'email' | 'select'; options?: readonly string[]; relation?: keyof Masters }
 type Masters = { branches: Option[]; departments: Option[]; designations: Option[]; grades: Option[]; costCentres: Option[]; employees: Option[] }
 type EmployeeDocument = { id: string; documentType: string; fileName: string; contentType: string; sizeBytes: number; uploadedAt: string }
+type EmployeeUserLink = { id: string; employmentId: string; userEmail: string; linkedAt: string }
 type ImportResult = { totalRows: number; acceptedRows: number; rejectedRows: number; rows: { rowNumber: number; accepted: boolean; employeeNumber?: string; error?: string }[] }
 
 const emptyMasters: Masters = { branches: [], departments: [], designations: [], grades: [], costCentres: [], employees: [] }
@@ -175,10 +176,46 @@ export default function EmployeeAdmin({ session, membership }: { session: Sessio
           </Box>)}
           {canEdit && <Button type="submit" variant="contained" disabled={busy} sx={{ mt: 3 }}>{busy ? 'Saving…' : 'Save employee'}</Button>}
         </Box>
+        {selectedId && <EmployeeUserAccess session={session} membership={membership} employeeId={selectedId} canEdit={canEdit} />}
         {selectedId && <EmployeeDocuments session={session} membership={membership} employeeId={selectedId} canEdit={canEdit} />}
       </Paper>
     </Stack>
   </Stack>
+}
+
+function EmployeeUserAccess({ session, membership, employeeId, canEdit }: { session: Session; membership: TenantMembership; employeeId: string; canEdit: boolean }) {
+  const [link, setLink] = useState<EmployeeUserLink | null>(null)
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const load = useCallback(async () => {
+    setBusy(true); setError('')
+    try { setLink((await apiJson<EmployeeUserLink[]>('/employees/user-links', session, membership.tenantId)).find((item) => item.employmentId === employeeId) ?? null) }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to load self-service access.') }
+    finally { setBusy(false) }
+  }, [employeeId, membership.tenantId, session])
+  useEffect(() => { setEmail(''); setNotice(''); void load() }, [load])
+  async function save(event: FormEvent) {
+    event.preventDefault(); setBusy(true); setError(''); setNotice('')
+    try { await apiJson(`/employees/user-links/${employeeId}`, session, membership.tenantId, { method: 'PUT', body: JSON.stringify({ email }) }); setEmail(''); setNotice('Self-service user linked.'); await load() }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to link user.') }
+    finally { setBusy(false) }
+  }
+  async function unlink() {
+    setBusy(true); setError(''); setNotice('')
+    try { const response = await apiFetch(`/employees/user-links/${employeeId}`, session, membership.tenantId, { method: 'DELETE' }); if (!response.ok) throw new Error(`Unlink failed (${response.status}).`); setNotice('Self-service user unlinked.'); await load() }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to unlink user.') }
+    finally { setBusy(false) }
+  }
+  return <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+    <Typography variant="h6">Self-service access</Typography>
+    <Typography color="text.secondary" variant="body2" sx={{ my: 1 }}>Link an active application user who already has access to this company.</Typography>
+    {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}{notice && <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert>}
+    {link ? <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}><Typography sx={{ flexGrow: 1 }}>{link.userEmail}</Typography>{canEdit && <Button color="error" onClick={() => void unlink()} disabled={busy}>Unlink</Button>}</Stack>
+      : canEdit ? <Stack component="form" onSubmit={save} direction={{ xs: 'column', sm: 'row' }} spacing={2}><TextField required type="email" size="small" label="Application user email" value={email} onChange={(event) => setEmail(event.target.value)} sx={{ flexGrow: 1 }} /><Button type="submit" variant="contained" disabled={busy}>Link user</Button></Stack>
+        : <Typography color="text.secondary">No self-service user linked.</Typography>}
+  </Box>
 }
 
 const documentTypes = [

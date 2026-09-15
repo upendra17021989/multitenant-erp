@@ -157,7 +157,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add explicit generated-to-released delivery control
 - [x] Add role-protected payslip list, generation, release and download APIs
 - [x] Add PDF content, rendering and tenant-isolation tests
-- [ ] Link application users to employments for employee self-service authorization
+- [x] Link application users to employments for employee self-service authorization
 - [ ] Add employee self-service payslip list and download screens
 - [x] Add payroll-administration payslip generation, release, listing and download screens
 - [ ] Add optional email delivery, delivery audit and employee acknowledgement
@@ -201,6 +201,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-13 | `mvn test` after initial payslip generation and secure delivery slice | PASS - 46 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-15 | `mvn test` after employee fields and Excel bulk import | PASS - 47 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-15 | `npm.cmd --prefix frontend run build` after employee import and payslip administration UI | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
+| 2026-09-15 | `mvn test` after employee self-service user linking | PASS - 48 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-15 | `npm.cmd --prefix frontend run build` after employee self-service linking controls | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
 
 ## Definition of done
 
