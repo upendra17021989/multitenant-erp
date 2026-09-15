@@ -12,5 +12,8 @@ public record Employee(
         String workEmail, UUID branchId, UUID departmentId, UUID designationId, UUID gradeId,
         UUID costCentreId, UUID reportingManagerEmploymentId, String paymentMode,
         String bankAccountName, String bankAccountNumber, String bankName, String bankBranch,
-        String bankIfsc, String pan, String aadhaarLastFour, String uan, String pfNumber, String esiNumber) {
+        String bankIfsc, String pan, String aadhaarLastFour, String uan, String pfNumber, String esiNumber,
+        String title, String maritalStatus, String fatherGuardianName, String ticketNumber,
+        LocalDate retirementDate, LocalDate pfJoiningDate, String pran, LocalDate groupJoiningDate,
+        String ccEmail, String division, String unit, String category, String project) {
 }

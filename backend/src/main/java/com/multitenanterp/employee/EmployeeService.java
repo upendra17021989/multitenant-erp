@@ -1,12 +1,14 @@
 package com.multitenanterp.employee;
 
 import com.multitenanterp.platform.tenant.TenantContext;
+import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.sql.DataSource;
@@ -18,6 +20,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 @Service
+@Validated
 public class EmployeeService {
     private static final String SELECT = """
             SELECT e.id,e.employee_number,e.employment_status,e.employment_type,
@@ -26,7 +29,9 @@ public class EmployeeService {
               e.joining_date,e.confirmation_date,e.probation_end_date,e.exit_date,e.exit_reason,e.work_email,
               e.branch_id,e.department_id,e.designation_id,e.grade_id,e.cost_centre_id,e.reporting_manager_employment_id,
               e.payment_mode,e.bank_account_name,e.bank_account_number,e.bank_name,e.bank_branch,e.bank_ifsc,
-              e.pan,e.aadhaar_last_four,e.uan,e.pf_number,e.esi_number
+              e.pan,e.aadhaar_last_four,e.uan,e.pf_number,e.esi_number,
+              p.title,p.marital_status,p.father_guardian_name,e.ticket_number,e.retirement_date,e.pf_joining_date,
+              e.pran,e.group_joining_date,e.cc_email,e.division,e.unit,e.category,e.project
             FROM employment e JOIN person p ON p.id=e.person_id AND p.tenant_id=e.tenant_id
             """;
     private final NamedParameterJdbcTemplate db;
@@ -51,26 +56,30 @@ public class EmployeeService {
     }
 
     @Transactional
-    public Employee create(SaveEmployeeRequest request) {
+    public Employee create(@Valid SaveEmployeeRequest request) {
         validateDates(request);
         UUID tenant = tenant(), personId = UUID.randomUUID(), employmentId = UUID.randomUUID();
         var p = parameters(request).addValue("tenant", tenant).addValue("personId", personId).addValue("id", employmentId);
         try {
             db.update("""
                     INSERT INTO person(id,tenant_id,first_name,middle_name,last_name,date_of_birth,gender,personal_email,
-                      mobile_number,current_address,permanent_address,emergency_contact_name,emergency_contact_phone)
+                      mobile_number,current_address,permanent_address,emergency_contact_name,emergency_contact_phone,
+                      title,marital_status,father_guardian_name)
                     VALUES(:personId,:tenant,:firstName,:middleName,:lastName,:dateOfBirth,:gender,:personalEmail,
-                      :mobileNumber,:currentAddress,:permanentAddress,:emergencyName,:emergencyPhone)
+                      :mobileNumber,:currentAddress,:permanentAddress,:emergencyName,:emergencyPhone,
+                      :title,:maritalStatus,:fatherGuardianName)
                     """, p);
             db.update("""
                     INSERT INTO employment(id,tenant_id,person_id,employee_number,employment_status,employment_type,
                       joining_date,confirmation_date,probation_end_date,exit_date,exit_reason,work_email,branch_id,
                       department_id,designation_id,grade_id,cost_centre_id,reporting_manager_employment_id,payment_mode,
-                      bank_account_name,bank_account_number,bank_name,bank_branch,bank_ifsc,pan,aadhaar_last_four,uan,pf_number,esi_number)
+                      bank_account_name,bank_account_number,bank_name,bank_branch,bank_ifsc,pan,aadhaar_last_four,uan,pf_number,esi_number,
+                      ticket_number,retirement_date,pf_joining_date,pran,group_joining_date,cc_email,division,unit,category,project)
                     VALUES(:id,:tenant,:personId,:employeeNumber,:employmentStatus,:employmentType,:joiningDate,
                       :confirmationDate,:probationEndDate,:exitDate,:exitReason,:workEmail,:branchId,:departmentId,
                       :designationId,:gradeId,:costCentreId,:managerId,:paymentMode,:bankAccountName,:bankAccountNumber,
-                      :bankName,:bankBranch,:bankIfsc,:pan,:aadhaarLastFour,:uan,:pfNumber,:esiNumber)
+                      :bankName,:bankBranch,:bankIfsc,:pan,:aadhaarLastFour,:uan,:pfNumber,:esiNumber,
+                      :ticketNumber,:retirementDate,:pfJoiningDate,:pran,:groupJoiningDate,:ccEmail,:division,:unit,:category,:project)
                     """, p);
         } catch (DataIntegrityViolationException exception) {
             throw conflict("Employee number or organisation assignment is invalid for this company");
@@ -79,7 +88,7 @@ public class EmployeeService {
     }
 
     @Transactional
-    public Employee update(UUID id, SaveEmployeeRequest request) {
+    public Employee update(UUID id, @Valid SaveEmployeeRequest request) {
         validateDates(request);
         var p = parameters(request).addValue("tenant", tenant()).addValue("id", id);
         try {
@@ -87,7 +96,8 @@ public class EmployeeService {
                     UPDATE person SET first_name=:firstName,middle_name=:middleName,last_name=:lastName,
                       date_of_birth=:dateOfBirth,gender=:gender,personal_email=:personalEmail,mobile_number=:mobileNumber,
                       current_address=:currentAddress,permanent_address=:permanentAddress,
-                      emergency_contact_name=:emergencyName,emergency_contact_phone=:emergencyPhone,updated_at=CURRENT_TIMESTAMP
+                      emergency_contact_name=:emergencyName,emergency_contact_phone=:emergencyPhone,title=:title,
+                      marital_status=:maritalStatus,father_guardian_name=:fatherGuardianName,updated_at=CURRENT_TIMESTAMP
                     WHERE tenant_id=:tenant AND id=(SELECT person_id FROM employment WHERE id=:id AND tenant_id=:tenant)
                     """, p);
             if (personUpdated == 0) throw missing();
@@ -99,7 +109,10 @@ public class EmployeeService {
                       cost_centre_id=:costCentreId,reporting_manager_employment_id=:managerId,payment_mode=:paymentMode,
                       bank_account_name=:bankAccountName,bank_account_number=:bankAccountNumber,bank_name=:bankName,
                       bank_branch=:bankBranch,bank_ifsc=:bankIfsc,pan=:pan,aadhaar_last_four=:aadhaarLastFour,
-                      uan=:uan,pf_number=:pfNumber,esi_number=:esiNumber,updated_at=CURRENT_TIMESTAMP
+                      uan=:uan,pf_number=:pfNumber,esi_number=:esiNumber,ticket_number=:ticketNumber,
+                      retirement_date=:retirementDate,pf_joining_date=:pfJoiningDate,pran=:pran,
+                      group_joining_date=:groupJoiningDate,cc_email=:ccEmail,division=:division,unit=:unit,
+                      category=:category,project=:project,updated_at=CURRENT_TIMESTAMP
                     WHERE id=:id AND tenant_id=:tenant
                     """, p);
             if (updated == 0) throw missing();
@@ -126,7 +139,13 @@ public class EmployeeService {
                 .addValue("bankAccountName", clean(r.bankAccountName())).addValue("bankAccountNumber", clean(r.bankAccountNumber()))
                 .addValue("bankName", clean(r.bankName())).addValue("bankBranch", clean(r.bankBranch())).addValue("bankIfsc", normalized(r.bankIfsc()))
                 .addValue("pan", normalized(r.pan())).addValue("aadhaarLastFour", clean(r.aadhaarLastFour())).addValue("uan", clean(r.uan()))
-                .addValue("pfNumber", clean(r.pfNumber())).addValue("esiNumber", clean(r.esiNumber()));
+                .addValue("pfNumber", clean(r.pfNumber())).addValue("esiNumber", clean(r.esiNumber()))
+                .addValue("title", clean(r.title())).addValue("maritalStatus", clean(r.maritalStatus()))
+                .addValue("fatherGuardianName", clean(r.fatherGuardianName())).addValue("ticketNumber", clean(r.ticketNumber()))
+                .addValue("retirementDate", r.retirementDate()).addValue("pfJoiningDate", r.pfJoiningDate())
+                .addValue("pran", clean(r.pran())).addValue("groupJoiningDate", r.groupJoiningDate())
+                .addValue("ccEmail", lower(r.ccEmail())).addValue("division", clean(r.division()))
+                .addValue("unit", clean(r.unit())).addValue("category", clean(r.category())).addValue("project", clean(r.project()));
     }
 
     private static Employee map(ResultSet r, int row) throws SQLException {
@@ -138,7 +157,10 @@ public class EmployeeService {
                 r.getObject("department_id",UUID.class),r.getObject("designation_id",UUID.class),r.getObject("grade_id",UUID.class),
                 r.getObject("cost_centre_id",UUID.class),r.getObject("reporting_manager_employment_id",UUID.class),r.getString("payment_mode"),
                 r.getString("bank_account_name"),r.getString("bank_account_number"),r.getString("bank_name"),r.getString("bank_branch"),
-                r.getString("bank_ifsc"),r.getString("pan"),r.getString("aadhaar_last_four"),r.getString("uan"),r.getString("pf_number"),r.getString("esi_number"));
+                r.getString("bank_ifsc"),r.getString("pan"),r.getString("aadhaar_last_four"),r.getString("uan"),r.getString("pf_number"),r.getString("esi_number"),
+                r.getString("title"),r.getString("marital_status"),r.getString("father_guardian_name"),r.getString("ticket_number"),
+                date(r,"retirement_date"),date(r,"pf_joining_date"),r.getString("pran"),date(r,"group_joining_date"),
+                r.getString("cc_email"),r.getString("division"),r.getString("unit"),r.getString("category"),r.getString("project"));
     }
 
     private static LocalDate date(ResultSet r, String column) throws SQLException { var value=r.getDate(column); return value==null?null:value.toLocalDate(); }

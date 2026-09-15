@@ -2,6 +2,7 @@ package com.multitenanterp.employee;
 
 import com.multitenanterp.platform.tenant.TenantContext;
 import org.h2.jdbcx.JdbcDataSource;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.time.LocalDate;
 import java.util.UUID;
 import java.nio.file.Path;
+import java.io.ByteArrayOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,6 +25,7 @@ class EmployeeTenantIsolationIntegrationTest {
     private final UUID tenantB = UUID.randomUUID();
     private EmployeeService service;
     private EmployeeDocumentService documents;
+    private EmployeeExcelImportService importer;
     private JdbcClient db;
     @TempDir Path storageRoot;
 
@@ -34,6 +37,7 @@ class EmployeeTenantIsolationIntegrationTest {
         createSchema();
         db.sql("INSERT INTO tenant(id) VALUES(?),(?)").params(tenantA, tenantB).update();
         service = new EmployeeService(dataSource);
+        importer = new EmployeeExcelImportService(db, service);
         documents = new EmployeeDocumentService(db, new FileSystemDocumentStorage(storageRoot.toString()));
     }
 
@@ -55,6 +59,14 @@ class EmployeeTenantIsolationIntegrationTest {
 
         TenantContext.set(tenantA);
         assertThat(service.employee(alpha.id()).firstName()).isEqualTo("Alpha");
+        assertThat(service.employee(alpha.id()))
+                .extracting(Employee::title, Employee::maritalStatus, Employee::fatherGuardianName,
+                        Employee::ticketNumber, Employee::retirementDate, Employee::pfJoiningDate,
+                        Employee::pran, Employee::groupJoiningDate, Employee::ccEmail,
+                        Employee::division, Employee::unit, Employee::category, Employee::project)
+                .containsExactly("Mr.", "Married", "Guardian", "T-1", LocalDate.of(2050,1,1),
+                        LocalDate.of(2026,1,1), "100000000002", LocalDate.of(2025,1,1),
+                        "cc@example.com", "Operations", "Unit 1", "Staff", "Project A");
         assertThat(service.employees("ACTIVE")).extracting(Employee::id).containsExactly(alpha.id());
     }
 
@@ -82,6 +94,39 @@ class EmployeeTenantIsolationIntegrationTest {
                 LocalDate.of(2026,1,1), LocalDate.of(2025,12,31));
         assertThatThrownBy(() -> service.create(invalid)).isInstanceOfSatisfying(ResponseStatusException.class,
                 exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void importsValidExcelRowsAndReportsInvalidRows() throws Exception {
+        byte[] content;
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("Employees");
+            var header = sheet.createRow(0);
+            header.createCell(0).setCellValue("Employee Code");
+            header.createCell(1).setCellValue("First Name");
+            header.createCell(2).setCellValue("Join Date");
+            header.createCell(3).setCellValue("Status");
+            header.createCell(4).setCellValue("Title");
+            var valid = sheet.createRow(1);
+            valid.createCell(0).setCellValue("EMP100"); valid.createCell(1).setCellValue("Jane Doe");
+            valid.createCell(2).setCellValue("2026-01-15"); valid.createCell(3).setCellValue("Active"); valid.createCell(4).setCellValue("Ms.");
+            var invalid = sheet.createRow(2);
+            invalid.createCell(0).setCellValue("EMP101"); invalid.createCell(1).setCellValue("SingleName");
+            workbook.write(output); content=output.toByteArray();
+        }
+
+        TenantContext.set(tenantA);
+        EmployeeImportResult result=importer.importExcel(new MockMultipartFile("file","employees.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",content),"Employees","PERMANENT");
+
+        assertThat(result.acceptedRows()).as(result.rows().toString()).isEqualTo(1);
+        assertThat(result.rejectedRows()).isEqualTo(1);
+        assertThat(service.employees(null)).singleElement().satisfies(employee -> {
+            assertThat(employee.employeeNumber()).isEqualTo("EMP100");
+            assertThat(employee.firstName()).isEqualTo("Jane");
+            assertThat(employee.lastName()).isEqualTo("Doe");
+            assertThat(employee.title()).isEqualTo("Ms.");
+        });
     }
 
     @Test
@@ -113,7 +158,9 @@ class EmployeeTenantIsolationIntegrationTest {
                 null,null,null,null,joiningDate,confirmationDate,null,null,null,
                 firstName.toLowerCase()+"@work.example.com",branchId,null,null,null,null,null,
                 "BANK_TRANSFER",firstName+" Employee","123456789","Example Bank",null,"ABCD0123456",
-                "ABCDE1234F","1234","100000000001",null,null);
+                "ABCDE1234F","1234","100000000001",null,null,
+                "Mr.","Married","Guardian","T-1",LocalDate.of(2050,1,1),LocalDate.of(2026,1,1),
+                "100000000002",LocalDate.of(2025,1,1),"CC@EXAMPLE.COM","Operations","Unit 1","Staff","Project A");
     }
 
     private void createSchema() {
@@ -123,7 +170,7 @@ class EmployeeTenantIsolationIntegrationTest {
         db.sql("CREATE TABLE designation(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE grade(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE cost_centre(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
-        db.sql("CREATE TABLE person(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,first_name VARCHAR(100),middle_name VARCHAR(100),last_name VARCHAR(100),date_of_birth DATE,gender VARCHAR(30),personal_email VARCHAR(320),mobile_number VARCHAR(30),current_address VARCHAR(4000),permanent_address VARCHAR(4000),emergency_contact_name VARCHAR(160),emergency_contact_phone VARCHAR(30),updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(id,tenant_id))").update();
+        db.sql("CREATE TABLE person(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,first_name VARCHAR(100),middle_name VARCHAR(100),last_name VARCHAR(100),date_of_birth DATE,gender VARCHAR(30),personal_email VARCHAR(320),mobile_number VARCHAR(30),current_address VARCHAR(4000),permanent_address VARCHAR(4000),emergency_contact_name VARCHAR(160),emergency_contact_phone VARCHAR(30),title VARCHAR(30),marital_status VARCHAR(30),father_guardian_name VARCHAR(160),updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(id,tenant_id))").update();
         db.sql("""
                 CREATE TABLE employment(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,person_id UUID NOT NULL,
                 employee_number VARCHAR(40) NOT NULL,employment_status VARCHAR(20),employment_type VARCHAR(30),joining_date DATE,
@@ -131,7 +178,9 @@ class EmployeeTenantIsolationIntegrationTest {
                 branch_id UUID,department_id UUID,designation_id UUID,grade_id UUID,cost_centre_id UUID,reporting_manager_employment_id UUID,
                 payment_mode VARCHAR(20),bank_account_name VARCHAR(160),bank_account_number VARCHAR(50),bank_name VARCHAR(160),
                 bank_branch VARCHAR(160),bank_ifsc VARCHAR(11),pan VARCHAR(10),aadhaar_last_four VARCHAR(4),uan VARCHAR(12),
-                pf_number VARCHAR(40),esi_number VARCHAR(30),updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                pf_number VARCHAR(40),esi_number VARCHAR(30),ticket_number VARCHAR(40),retirement_date DATE,
+                pf_joining_date DATE,pran VARCHAR(20),group_joining_date DATE,cc_email VARCHAR(320),division VARCHAR(160),
+                unit VARCHAR(160),category VARCHAR(160),project VARCHAR(160),updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(tenant_id,employee_number),UNIQUE(id,tenant_id),
                 FOREIGN KEY(person_id,tenant_id) REFERENCES person(id,tenant_id),
                 FOREIGN KEY(branch_id,tenant_id) REFERENCES branch(id,tenant_id))

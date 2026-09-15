@@ -29,5 +29,11 @@ public record SaveEmployeeRequest(
         @Pattern(regexp="^$|[A-Z]{5}[0-9]{4}[A-Z]$") String pan,
         @Pattern(regexp="^$|[0-9]{4}$") String aadhaarLastFour,
         @Pattern(regexp="^$|[0-9]{12}$") String uan,
-        @Size(max=40) String pfNumber, @Size(max=30) String esiNumber) {
+        @Size(max=40) String pfNumber, @Size(max=30) String esiNumber,
+        @Size(max=30) String title, @Size(max=30) String maritalStatus,
+        @Size(max=160) String fatherGuardianName, @Size(max=40) String ticketNumber,
+        LocalDate retirementDate, LocalDate pfJoiningDate,
+        @Pattern(regexp="^$|[0-9]{12}$") String pran, LocalDate groupJoiningDate,
+        @Email @Size(max=320) String ccEmail, @Size(max=160) String division,
+        @Size(max=160) String unit, @Size(max=160) String category, @Size(max=160) String project) {
 }

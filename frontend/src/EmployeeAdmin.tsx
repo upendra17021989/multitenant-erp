@@ -11,6 +11,7 @@ type Option = { id: string; name?: string; title?: string; employeeNumber?: stri
 type Field = { key: string; label: string; type?: 'date' | 'email' | 'select'; options?: readonly string[]; relation?: keyof Masters }
 type Masters = { branches: Option[]; departments: Option[]; designations: Option[]; grades: Option[]; costCentres: Option[]; employees: Option[] }
 type EmployeeDocument = { id: string; documentType: string; fileName: string; contentType: string; sizeBytes: number; uploadedAt: string }
+type ImportResult = { totalRows: number; acceptedRows: number; rejectedRows: number; rows: { rowNumber: number; accepted: boolean; employeeNumber?: string; error?: string }[] }
 
 const emptyMasters: Masters = { branches: [], departments: [], designations: [], grades: [], costCentres: [], employees: [] }
 const editRoles = new Set(['SYSTEM_ADMIN', 'GROUP_ADMIN', 'COMPANY_ADMIN', 'HR_MANAGER'])
@@ -19,15 +20,18 @@ const employmentTypes = ['PERMANENT', 'PROBATION', 'CONTRACT', 'CONSULTANT', 'IN
 
 const sections: { title: string; fields: Field[] }[] = [
   { title: 'Employment', fields: [
-    { key: 'employeeNumber', label: 'Employee number' }, { key: 'employmentStatus', label: 'Status', type: 'select', options: statuses },
+    { key: 'employeeNumber', label: 'Employee number' }, { key: 'ticketNumber', label: 'Ticket number' },
+    { key: 'employmentStatus', label: 'Status', type: 'select', options: statuses },
     { key: 'employmentType', label: 'Employment type', type: 'select', options: employmentTypes },
     { key: 'joiningDate', label: 'Joining date', type: 'date' }, { key: 'confirmationDate', label: 'Confirmation date', type: 'date' },
-    { key: 'probationEndDate', label: 'Probation end date', type: 'date' }, { key: 'exitDate', label: 'Exit date', type: 'date' },
+    { key: 'probationEndDate', label: 'Probation end date', type: 'date' }, { key: 'groupJoiningDate', label: 'Group joining date', type: 'date' },
+    { key: 'retirementDate', label: 'Retirement / F&F date', type: 'date' }, { key: 'exitDate', label: 'Exit date', type: 'date' },
     { key: 'exitReason', label: 'Exit reason' }, { key: 'workEmail', label: 'Work email', type: 'email' },
   ]},
   { title: 'Personal details', fields: [
-    { key: 'firstName', label: 'First name' }, { key: 'middleName', label: 'Middle name' }, { key: 'lastName', label: 'Last name' },
+    { key: 'title', label: 'Title' }, { key: 'firstName', label: 'First name' }, { key: 'middleName', label: 'Middle name' }, { key: 'lastName', label: 'Last name' },
     { key: 'dateOfBirth', label: 'Date of birth', type: 'date' }, { key: 'gender', label: 'Gender' },
+    { key: 'maritalStatus', label: 'Marital status' }, { key: 'fatherGuardianName', label: 'Father / guardian name' },
     { key: 'personalEmail', label: 'Personal email', type: 'email' }, { key: 'mobileNumber', label: 'Mobile number' },
     { key: 'currentAddress', label: 'Current address' }, { key: 'permanentAddress', label: 'Permanent address' },
     { key: 'emergencyContactName', label: 'Emergency contact' }, { key: 'emergencyContactPhone', label: 'Emergency phone' },
@@ -39,13 +43,16 @@ const sections: { title: string; fields: Field[] }[] = [
     { key: 'gradeId', label: 'Grade', type: 'select', relation: 'grades' },
     { key: 'costCentreId', label: 'Cost centre', type: 'select', relation: 'costCentres' },
     { key: 'reportingManagerEmploymentId', label: 'Reporting manager', type: 'select', relation: 'employees' as keyof Masters },
+    { key: 'division', label: 'Division' }, { key: 'unit', label: 'Unit' },
+    { key: 'category', label: 'Category' }, { key: 'project', label: 'Project' },
   ]},
   { title: 'Payment and statutory details', fields: [
     { key: 'paymentMode', label: 'Payment mode', type: 'select', options: ['BANK_TRANSFER', 'CHEQUE', 'CASH'] },
     { key: 'bankAccountName', label: 'Account holder' }, { key: 'bankAccountNumber', label: 'Account number' },
     { key: 'bankName', label: 'Bank' }, { key: 'bankBranch', label: 'Bank branch' }, { key: 'bankIfsc', label: 'IFSC' },
     { key: 'pan', label: 'PAN' }, { key: 'aadhaarLastFour', label: 'Aadhaar last four digits' },
-    { key: 'uan', label: 'UAN' }, { key: 'pfNumber', label: 'PF number' }, { key: 'esiNumber', label: 'ESI number' },
+    { key: 'uan', label: 'UAN' }, { key: 'pfNumber', label: 'PF number' }, { key: 'pfJoiningDate', label: 'PF joining date', type: 'date' },
+    { key: 'esiNumber', label: 'ESI number' }, { key: 'pran', label: 'PRAN' }, { key: 'ccEmail', label: 'CC email', type: 'email' },
   ]},
 ]
 
@@ -60,6 +67,10 @@ export default function EmployeeAdmin({ session, membership }: { session: Sessio
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [sheetName, setSheetName] = useState('')
+  const [importEmploymentType, setImportEmploymentType] = useState('PERMANENT')
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const canEdit = membership.roles.some((role) => editRoles.has(role))
 
   const load = useCallback(async () => {
@@ -95,9 +106,45 @@ export default function EmployeeAdmin({ session, membership }: { session: Sessio
     finally { setBusy(false) }
   }
 
+  async function uploadEmployees(event: FormEvent) {
+    event.preventDefault()
+    if (!importFile || !sheetName.trim()) { setError('Choose an Excel file and enter the worksheet name.'); return }
+    setBusy(true); setError(''); setNotice(''); setImportResult(null)
+    try {
+      const body = new FormData(); body.append('file', importFile)
+      const query = new URLSearchParams({ sheetName: sheetName.trim(), employmentType: importEmploymentType })
+      const response = await apiFetch(`/employees/imports/excel?${query}`, session, membership.tenantId, { method: 'POST', body })
+      if (!response.ok) {
+        const problem = await response.json().catch(() => ({})) as { message?: string; error?: string }
+        throw new Error(problem.message ?? problem.error ?? `Import failed (${response.status}).`)
+      }
+      const result = await response.json() as ImportResult
+      setImportResult(result); setImportFile(null)
+      setNotice(`Import complete: ${result.acceptedRows} accepted, ${result.rejectedRows} rejected.`)
+      await load()
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to import employees.') }
+    finally { setBusy(false) }
+  }
+
   return <Stack spacing={3}>
     {error && <Alert severity="error">{error}</Alert>}
     {notice && <Alert severity="success">{notice}</Alert>}
+    {canEdit && <Paper component="form" onSubmit={uploadEmployees} sx={{ p: 3 }}>
+      <Typography variant="h6">Bulk employee upload</Typography>
+      <Typography color="text.secondary" sx={{ my: 1 }}>Upload an .xlsx file into the active company. Required columns: Employee Code, First Name, and Join Date. Existing employee codes are skipped.</Typography>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+        <Button component="label" variant="outlined">Choose Excel<input hidden type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => setImportFile(event.target.files?.[0] ?? null)} /></Button>
+        <Typography color="text.secondary" sx={{ minWidth: 180 }}>{importFile?.name ?? 'No file selected'}</Typography>
+        <TextField required size="small" label="Worksheet name" placeholder="AmarFibro" value={sheetName} onChange={(event) => setSheetName(event.target.value)} />
+        <TextField select size="small" label="Default employment type" value={importEmploymentType} onChange={(event) => setImportEmploymentType(event.target.value)} sx={{ minWidth: 190 }}>
+          {employmentTypes.map((value) => <MenuItem key={value} value={value}>{label(value)}</MenuItem>)}
+        </TextField>
+        <Button type="submit" variant="contained" disabled={busy || !importFile || !sheetName.trim()}>Upload employees</Button>
+      </Stack>
+      {importResult && <Box sx={{ mt: 2 }}><Alert severity={importResult.rejectedRows ? 'warning' : 'success'}>{importResult.acceptedRows} accepted; {importResult.rejectedRows} rejected.</Alert>
+        {importResult.rows.filter((row) => !row.accepted).map((row) => <Typography key={row.rowNumber} color="error" variant="body2" sx={{ mt: 0.75 }}>Row {row.rowNumber}{row.employeeNumber ? ` (${row.employeeNumber})` : ''}: {row.error}</Typography>)}
+      </Box>}
+    </Paper>}
     <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} alignItems="flex-start">
       <Paper sx={{ width: { xs: '100%', lg: '42%' }, overflow: 'auto' }}>
         <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 2 }}>
