@@ -36,7 +36,7 @@
 - [ ] Automated monthly payroll
 - [ ] Statutory deductions and reports
 - [ ] Employee self-service portal
-- [ ] PDF payslips
+- [x] PDF payslips
 - [ ] Payroll/accounting export
 - [ ] Management dashboards
 - [ ] Other: ______________________________
@@ -65,7 +65,7 @@ Define measurable outcomes, for example: payroll completed within two working da
 - [ ] Holiday, shift and attendance management
 - [x] Leave types, balances, requests and approvals
 - [x] Salary components and salary structures
-- [ ] Monthly payroll calculation and approval
+- [x] Monthly payroll calculation and approval
 - [ ] Payslip PDF generation and employee access
 - [ ] Payroll, attendance and leave reports
 - [ ] Audit history
@@ -349,7 +349,7 @@ Decide which fields are mandatory, optional, confidential, editable by employees
 ### Attendance source
 
 - [ ] Manual entry
-- [ ] Excel/CSV import
+- [x] Excel/CSV import
 - [ ] Biometric device
 - [ ] Mobile/web check-in
 - [ ] Third-party attendance API
@@ -561,7 +561,7 @@ Still pending for monthly payroll processing:
 - [ ] PF, ESI, PT, LWF, TDS, gratuity and bonus calculation engines
 - [x] Variable earning/deduction API inputs and CSV bulk import
 - [x] Draft payroll calculation, exception review and variance comparison
-- [ ] Maker-checker approval, lock, reopen, reversal and payment workflow
+- [x] Maker-checker approval, lock, reopen and reversal workflow
 - [ ] Validation against the ten approved organisation calculation examples
 
 Initial monthly-payroll implementation completed on 2026-09-12:

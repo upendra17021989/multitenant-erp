@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-13
+Last updated: 2026-09-15
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -88,6 +88,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add employee document upload, listing and download APIs
 - [x] Add employee document upload, listing and download controls to the employee UI
 - [x] Add a durable Supabase Storage adapter and server-only configuration
+- [x] Add employee-allotment fields from the supplied HR workbook to the schema, API and UI
+- [x] Add tenant-scoped Excel employee import with worksheet selection and row-level validation
 - [ ] Provision the private document bucket and storage credentials in the deployed environment
 
 ## M05 checklist
@@ -157,7 +159,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add PDF content, rendering and tenant-isolation tests
 - [ ] Link application users to employments for employee self-service authorization
 - [ ] Add employee self-service payslip list and download screens
-- [ ] Add payroll-administration payslip generation and release screens
+- [x] Add payroll-administration payslip generation, release, listing and download screens
 - [ ] Add optional email delivery, delivery audit and employee acknowledgement
 
 ## Verification history
@@ -197,6 +199,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-13 | `npm.cmd --prefix frontend run build` after payroll approval workflow | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
 | 2026-09-13 | Payslip PDF text extraction and 144-DPI raster inspection | PASS - one-page layout is legible, aligned and unclipped |
 | 2026-09-13 | `mvn test` after initial payslip generation and secure delivery slice | PASS - 46 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-15 | `mvn test` after employee fields and Excel bulk import | PASS - 47 tests, 0 failures, 1 environment-dependent test skipped |
+| 2026-09-15 | `npm.cmd --prefix frontend run build` after employee import and payslip administration UI | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
 
 ## Definition of done
 
