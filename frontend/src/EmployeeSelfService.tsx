@@ -1,3 +1,4 @@
+import EmployeePayslips from './EmployeePayslips'
 import {useEffect, useState, type FormEvent} from 'react'
 import type {Session} from '@supabase/supabase-js'
 import {Alert, Button, MenuItem, Paper, Stack, TextField, Typography} from '@mui/material'
@@ -6,14 +7,13 @@ import {apiFetch, apiJson, type TenantMembership} from './api'
 type LeaveType = {id:string; name:string; status:string; supportingDocumentRequired:boolean}
 type Balance = {id:string; leaveTypeId:string; leaveYear:number; available:number}
 type Leave = {id:string; leaveTypeId:string; startDate:string; endDate:string; requestedDays:number; status:string}
-type Payslip = {id:string; payrollYear:number; payrollMonth:number; fileName:string}
+
 
 export default function EmployeeSelfService({session, membership}:{session:Session; membership:TenantMembership}) {
   const [employmentId, setEmploymentId] = useState('')
   const [types, setTypes] = useState<LeaveType[]>([])
   const [balances, setBalances] = useState<Balance[]>([])
   const [requests, setRequests] = useState<Leave[]>([])
-  const [payslips, setPayslips] = useState<Payslip[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(true)
   const [revision, setRevision] = useState(0)
@@ -26,14 +26,13 @@ export default function EmployeeSelfService({session, membership}:{session:Sessi
     Promise.all([
       apiJson<{employmentId:string}>('/self/employment', session, tenant),
       apiJson<LeaveType[]>('/leave/types', session, tenant),
-      apiJson<Payslip[]>('/self/payslips', session, tenant),
-    ]).then(async ([identity, leaveTypes, slips]) => {
+    ]).then(async ([identity, leaveTypes]) => {
       const [balanceRows, requestRows] = await Promise.all([
         apiJson<Balance[]>(`/leave/balances?employmentId=${identity.employmentId}`, session, tenant),
         apiJson<Leave[]>(`/leave/requests?employmentId=${identity.employmentId}`, session, tenant),
       ])
       if (!active) return
-      setEmploymentId(identity.employmentId); setTypes(leaveTypes); setPayslips(slips)
+      setEmploymentId(identity.employmentId); setTypes(leaveTypes)
       setBalances(balanceRows); setRequests(requestRows); setError('')
     }).catch((e:unknown) => {if(active) setError(message(e))})
       .finally(() => {if(active) setBusy(false)})
@@ -60,27 +59,12 @@ export default function EmployeeSelfService({session, membership}:{session:Sessi
       await mutate('/leave/requests', {...form, employmentId, supportingDocumentId})
     } catch(e) {setError(message(e));setBusy(false)}
   }
-  async function download(slip:Payslip) {
-    setBusy(true); setError('')
-    try {
-      const response = await apiFetch(`/self/payslips/${slip.id}/content`, session, tenant)
-      if(!response.ok) throw new Error(`Unable to download payslip (${response.status}).`)
-      const url = URL.createObjectURL(await response.blob())
-      const anchor = document.createElement('a'); anchor.href = url; anchor.download = slip.fileName
-      anchor.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch(e) {setError(message(e))} finally {setBusy(false)}
-  }
   const name = (id:string) => types.find(t => t.id === id)?.name ?? id
   return <Stack spacing={3}>
     <Typography variant="h5">My leave and payslips — {membership.legalName}</Typography>
     {error && <Alert severity="error">{error} If your employee profile is not linked, contact HR.</Alert>}
     {busy && <Typography role="status">Loading…</Typography>}
-    <Paper sx={{p:3}}><Typography variant="h6">Released payslips</Typography>
-      {!busy && !payslips.length && <Typography>No released payslips available.</Typography>}
-      {payslips.map(slip => <Button key={slip.id} disabled={busy} onClick={() => void download(slip)}>
-        Download {slip.payrollYear}-{String(slip.payrollMonth).padStart(2,'0')}
-      </Button>)}
-    </Paper>
+    <EmployeePayslips key={session.user.id + ':' + tenant} session={session} membership={membership} />
     <Paper sx={{p:3}}><Typography variant="h6">Leave balances</Typography>
       {!busy && !balances.length && <Typography>No leave balances configured.</Typography>}
       {balances.map(balance => <Typography key={balance.id}>{name(balance.leaveTypeId)} ({balance.leaveYear}): {balance.available} days available</Typography>)}

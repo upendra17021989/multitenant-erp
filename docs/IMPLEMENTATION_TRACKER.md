@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-15
+Last updated: 2026-09-21
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -158,7 +158,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add role-protected payslip list, generation, release and download APIs
 - [x] Add PDF content, rendering and tenant-isolation tests
 - [x] Link application users to employments for employee self-service authorization
-- [ ] Add employee self-service payslip list and download screens
+- [x] Add employee self-service payslip list and download screens
 - [x] Add payroll-administration payslip generation, release, listing and download screens
 - [ ] Add optional email delivery, delivery audit and employee acknowledgement
 
@@ -203,6 +203,18 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 | 2026-09-15 | `npm.cmd --prefix frontend run build` after employee import and payslip administration UI | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
 | 2026-09-15 | `mvn test` after employee self-service user linking | PASS - 48 tests, 0 failures, 1 environment-dependent test skipped |
 | 2026-09-15 | `npm.cmd --prefix frontend run build` after employee self-service linking controls | PASS - TypeScript and Vite production build; Node upgrade and bundle-size warnings remain |
+
+## Employee payslip self-service completion (2026-09-21)
+
+- [x] Correct API period fields and isolate payslip loading/download state from leave failures.
+- [x] Add refresh, loading, empty and error states with user/company component reset.
+- [x] Verify backend ownership, release, final-payroll and tenant restrictions through existing tests.
+- [x] `mvn test`: PASS - 65 tests, 0 failures/errors, 1 environment-dependent test skipped.
+- [x] `npm.cmd run build`: PASS - TypeScript and Vite; bundle-size warning remains.
+- [x] Update the HR/payroll requirements checklist with completed scope and remaining acceptance work.
+- [ ] Complete live authenticated employee acceptance testing with deployed storage.
+
+No schema change required. M10 remains IN PROGRESS for optional email delivery, delivery audit and acknowledgement.
 
 ## Definition of done
 

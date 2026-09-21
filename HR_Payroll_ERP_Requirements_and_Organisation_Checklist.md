@@ -66,7 +66,7 @@ Define measurable outcomes, for example: payroll completed within two working da
 - [x] Leave types, balances, requests and approvals
 - [x] Salary components and salary structures
 - [x] Monthly payroll calculation and approval
-- [ ] Payslip PDF generation and employee access
+- [x] Payslip PDF generation and employee access
 - [ ] Payroll, attendance and leave reports
 - [ ] Audit history
 
@@ -669,13 +669,27 @@ Provide:
 - Preferred language(s)
 - Email wording, sender address and delivery method
 
-- [ ] Payslip available in employee portal
+- [x] Payslip available in employee portal
 - [ ] Payslip emailed to employee
 - [ ] Bulk ZIP/PDF download for Payroll team
 - [ ] Password-protected PDF
 - [ ] Digital signature required
 
 ---
+
+### Employee payslip self-service completion (2026-09-21)
+
+- [x] Employee portal lists released payslips using the API year/month fields.
+- [x] Employees can download their released PDF payslips through authenticated, tenant-scoped requests.
+- [x] Payslip loading and downloads operate independently of leave API failures.
+- [x] Added dedicated loading, error, empty-state and refresh controls.
+- [x] Payslip component resets when the authenticated user or active company changes.
+- [x] Verified existing tests for ownership, unreleased payslip denial, tenant isolation and reversed payroll denial.
+- [x] Backend verification: `mvn test` passed (65 tests, no failures/errors, one environment-dependent test skipped).
+- [x] Frontend verification: `npm.cmd run build` passed; existing bundle-size warning remains.
+- [ ] Live authenticated employee acceptance test against deployed storage and company data.
+
+This completes the M10 employee self-service payslip screen step. Optional email delivery, delivery audit and employee acknowledgement remain pending; this does not mark the entire M10 milestone or business sign-off complete. No database migration was required.
 
 ## 12. Reports, Dashboards and Exports
 
