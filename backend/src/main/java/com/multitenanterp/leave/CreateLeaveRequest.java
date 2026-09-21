@@ -4,4 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 public record CreateLeaveRequest(@NotNull UUID employmentId,@NotNull UUID leaveTypeId,@NotNull LocalDate startDate,
- @NotNull LocalDate endDate,@NotNull @DecimalMin(value="0",inclusive=false) BigDecimal requestedDays,@NotBlank @Size(max=1000) String reason) {}
+ @NotNull LocalDate endDate,@NotNull @DecimalMin(value="0",inclusive=false) BigDecimal requestedDays,@NotBlank @Size(max=1000) String reason,UUID supportingDocumentId) {
+ public CreateLeaveRequest(UUID employmentId,UUID leaveTypeId,LocalDate startDate,LocalDate endDate,BigDecimal requestedDays,String reason){this(employmentId,leaveTypeId,startDate,endDate,requestedDays,reason,null);}
+}

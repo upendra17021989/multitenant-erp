@@ -24,10 +24,10 @@ public class AttendanceController {
     public WorkShift createShift(@Valid @RequestBody SaveWorkShiftRequest r){return service.saveShift(null,r);}
     @PutMapping("/shifts/{id}") @PreAuthorize(CAN_EDIT)
     public WorkShift updateShift(@PathVariable UUID id,@Valid @RequestBody SaveWorkShiftRequest r){return service.saveShift(id,r);}
-    @GetMapping("/shift-assignments") public List<ShiftAssignment> assignments(@RequestParam UUID employmentId){return service.assignments(employmentId);}
+    @GetMapping("/shift-assignments") @PreAuthorize("@tenantAuthorization.hasAnyRole('SYSTEM_ADMIN','GROUP_ADMIN','COMPANY_ADMIN','HR_MANAGER','HR_EXECUTIVE','PAYROLL_MANAGER','PAYROLL_EXECUTIVE') or @tenantAuthorization.isCurrentEmployee(#employmentId)") public List<ShiftAssignment> assignments(@RequestParam UUID employmentId){return service.assignments(employmentId);}
     @PostMapping("/shift-assignments") @ResponseStatus(HttpStatus.CREATED) @PreAuthorize(CAN_EDIT)
     public ShiftAssignment assign(@Valid @RequestBody SaveShiftAssignmentRequest r){return service.assignShift(r);}
-    @GetMapping("/records") public List<AttendanceRecord> records(@RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) UUID employmentId){return service.attendance(from,to,employmentId);}
+    @GetMapping("/records") @PreAuthorize("@tenantAuthorization.hasAnyRole('SYSTEM_ADMIN','GROUP_ADMIN','COMPANY_ADMIN','HR_MANAGER','HR_EXECUTIVE','PAYROLL_MANAGER','PAYROLL_EXECUTIVE') or @tenantAuthorization.isCurrentEmployee(#employmentId)") public List<AttendanceRecord> records(@RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) UUID employmentId){return service.attendance(from,to,employmentId);}
     @PostMapping("/records") @ResponseStatus(HttpStatus.CREATED) @PreAuthorize(CAN_EDIT)
     public AttendanceRecord createRecord(@Valid @RequestBody SaveAttendanceRequest r){return service.saveAttendance(null,r);}
     @PutMapping("/records/{id}") @PreAuthorize(CAN_EDIT)

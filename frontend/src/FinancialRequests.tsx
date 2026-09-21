@@ -1,0 +1,38 @@
+import {useEffect,useState,type FormEvent} from 'react'
+import type {Session} from '@supabase/supabase-js'
+import {Alert,Button,MenuItem,Paper,Stack,TextField,Typography} from '@mui/material'
+import {apiFetch,apiJson,type TenantMembership} from './api'
+type Employee={id:string;employeeNumber:string;firstName:string;lastName:string}
+type Request={id:string;employmentId:string;requestType:string;amount:number;installments:number;purpose:string;status:string;requestedBy:string;decisionComment?:string;paymentReference?:string;receiptId?:string}
+type Recovery={year:number;month:number;amount:number;includedInFinalPayroll:boolean}
+export default function FinancialRequests({session,membership}:{session:Session;membership:TenantMembership}){
+ const admin=membership.roles.some(r=>['SYSTEM_ADMIN','GROUP_ADMIN','COMPANY_ADMIN','PAYROLL_MANAGER'].includes(r))
+ const [rows,setRows]=useState<Request[]>([]),[employees,setEmployees]=useState<Employee[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[revision,setRevision]=useState(0)
+ const [form,setForm]=useState({employmentId:'',requestType:'EXPENSE',amount:0,installments:1,firstRecoveryMonth:'',purpose:''})
+ const [file,setFile]=useState<File|null>(null),[comment,setComment]=useState(''),[reference,setReference]=useState(''),[recoveries,setRecoveries]=useState<Recovery[]>([]),[recoveryId,setRecoveryId]=useState('')
+ useEffect(()=>{let active=true;setBusy(true);setError('');Promise.all([apiJson<Request[]>('/financial-requests',session,membership.tenantId),admin?apiJson<Employee[]>('/employees?status=ACTIVE',session,membership.tenantId):apiJson<{employmentId:string}>('/self/employment',session,membership.tenantId)]).then(([requests,identity])=>{if(!active)return;setRows(requests);if(Array.isArray(identity))setEmployees(identity);else setForm(f=>({...f,employmentId:identity.employmentId}))}).catch((e:unknown)=>{if(active)setError(message(e))}).finally(()=>{if(active)setBusy(false)});return()=>{active=false}},[session,membership.tenantId,admin,revision])
+ async function action(path:string,body:unknown){setBusy(true);setError('');try{await apiJson(path,session,membership.tenantId,{method:'POST',body:JSON.stringify(body)});setRevision(v=>v+1)}catch(e){setError(message(e));setBusy(false)}}
+ async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{let receiptId:string|undefined;if(file&&form.requestType==='EXPENSE'){const body=new FormData();body.append('file',file);body.append('documentType','EXPENSE_RECEIPT');const response=await apiFetch(admin?`/financial-requests/employees/${form.employmentId}/receipt`:'/self/documents/expense-receipt',session,membership.tenantId,{method:'POST',body});if(!response.ok)throw new Error('Unable to upload receipt.');receiptId=(await response.json() as {id:string}).id;}await action('/financial-requests',{...form,firstRecoveryMonth:form.requestType==='EXPENSE'?null:`${form.firstRecoveryMonth}-01`,receiptId})}catch(e){setError(message(e));setBusy(false)}}
+ async function downloadReceipt(id:string){setBusy(true);try{const response=await apiFetch(`/financial-requests/${id}/receipt`,session,membership.tenantId);if(!response.ok)throw new Error('Unable to download receipt.');const url=URL.createObjectURL(await response.blob()),anchor=document.createElement('a');anchor.href=url;anchor.download=response.headers.get('content-disposition')?.match(/filename="([^"]+)"/)?.[1]??'receipt';anchor.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){setError(message(e))}finally{setBusy(false)}}
+ async function showRecovery(id:string){setBusy(true);try{setRecoveries(await apiJson<Recovery[]>(`/financial-requests/${id}/recoveries`,session,membership.tenantId));setRecoveryId(id)}catch(e){setError(message(e))}finally{setBusy(false)}}
+ return <Stack spacing={2}><Typography variant="h5">Expenses, loans and advances — {membership.legalName}</Typography>
+  <Typography>Loans and advances are interest-free. Finance records an external disbursement reference before payroll recovery is scheduled. Expenses are reimbursed externally and require receipts. This screen does not send bank payments.</Typography>
+  {error&&<Alert severity="error">{error}</Alert>}
+  <Paper component="form" onSubmit={submit} sx={{p:3}}><Stack spacing={2}><Typography variant="h6">New request</Typography>
+   {admin&&<TextField required select label="Employee" value={form.employmentId} onChange={e=>setForm({...form,employmentId:e.target.value})}>{employees.map(employee=><MenuItem key={employee.id} value={employee.id}>{employee.employeeNumber} — {employee.firstName} {employee.lastName}</MenuItem>)}</TextField>}
+   <TextField select label="Type" value={form.requestType} onChange={e=>setForm({...form,requestType:e.target.value})}>{['EXPENSE','LOAN','ADVANCE'].map(value=><MenuItem key={value} value={value}>{value}</MenuItem>)}</TextField>
+   <TextField required type="number" label="Amount (INR)" inputProps={{min:0.01,step:0.01}} value={form.amount} onChange={e=>setForm({...form,amount:Number(e.target.value)})}/>
+   <TextField required multiline label="Purpose" inputProps={{maxLength:1000}} value={form.purpose} onChange={e=>setForm({...form,purpose:e.target.value})}/>
+   {form.requestType==='EXPENSE'?<><Typography>Receipt (maximum 10 MB)</Typography><input required type="file" aria-label="Expense receipt" onChange={e=>setFile(e.target.files?.[0]??null)}/></>:<><TextField required type="number" label="Monthly installments" inputProps={{min:1,max:60,step:1}} value={form.installments} onChange={e=>setForm({...form,installments:Number(e.target.value)})}/><TextField required type="month" label="First recovery month" InputLabelProps={{shrink:true}} value={form.firstRecoveryMonth} onChange={e=>setForm({...form,firstRecoveryMonth:e.target.value})}/></>}
+   <Button type="submit" disabled={busy||!form.employmentId}>Submit for approval</Button>
+  </Stack></Paper>
+  {admin&&<Stack direction={{xs:'column',md:'row'}} spacing={2}><TextField label="Approval/rejection comment" value={comment} onChange={e=>setComment(e.target.value)}/><TextField label="External payment reference" value={reference} onChange={e=>setReference(e.target.value)}/></Stack>}
+  {rows.map(row=><Paper key={row.id} sx={{p:2}}><Typography>{row.requestType} · INR {row.amount} · {row.status}</Typography><Typography>{row.purpose}</Typography><Typography variant="caption">{row.decisionComment} {row.paymentReference&&`Payment: ${row.paymentReference}`}</Typography>
+   {row.receiptId&&<Button disabled={busy} onClick={()=>void downloadReceipt(row.id)}>Download receipt</Button>}{admin&&row.status==='PENDING'&&<Stack direction="row">{['APPROVED','REJECTED'].map(decision=><Button key={decision} disabled={busy||!comment.trim()||row.requestedBy===session.user.id} onClick={()=>void action(`/financial-requests/${row.id}/decision`,{decision,comment})}>{decision==='APPROVED'?'Approve':'Reject'}</Button>)}</Stack>}
+   {admin&&row.status==='APPROVED'&&<Button disabled={busy||!reference.trim()} onClick={()=>void action(`/financial-requests/${row.id}/payment`,{reference})}>Record completed external payment{row.requestType==='EXPENSE'?'':' and schedule recovery'}</Button>}
+   {row.status==='DISBURSED'&&<Button disabled={busy} onClick={()=>void showRecovery(row.id)}>View recovery schedule</Button>}
+   {recoveryId===row.id&&recoveries.map(r=><Typography key={`${r.year}-${r.month}`}>{r.year}-{String(r.month).padStart(2,'0')} · INR {r.amount} · {r.includedInFinalPayroll?'Included in finalized payroll':'Awaiting finalized payroll'}</Typography>)}
+  </Paper>)}
+ </Stack>
+}
+function message(e:unknown){return e instanceof Error?e.message:'Operation failed.'}

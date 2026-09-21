@@ -5,12 +5,13 @@ import {
   TableBody, TableCell, TableHead, TableRow, Tabs, TextField, Typography,
 } from '@mui/material'
 import { apiFetch, apiJson, type TenantMembership } from './api'
+import AttendanceReviews from './AttendanceReviews'
 
 type Employee = { id: string; employeeNumber: string; firstName: string; lastName: string }
 type Shift = { id: string; code: string; name: string; startTime: string; endTime: string; breakMinutes: number; graceInMinutes: number; graceOutMinutes: number; fullDayMinutes: number; halfDayMinutes: number; effectiveFrom: string; effectiveTo?: string; status: string }
 type Attendance = { id: string; employmentId: string; attendanceDate: string; shiftId?: string; status: string; checkIn?: string; checkOut?: string; workedMinutes?: number; overtimeMinutes: number; source: string; notes?: string }
 type ImportResult = { totalRows: number; acceptedRows: number; rejectedRows: number; rows: { rowNumber: number; accepted: boolean; error?: string }[] }
-type Section = 'records' | 'shifts' | 'assignments' | 'import'
+type Section = 'reviews' | 'records' | 'shifts' | 'assignments' | 'import'
 
 const editRoles = new Set(['SYSTEM_ADMIN','GROUP_ADMIN','COMPANY_ADMIN','HR_MANAGER','HR_EXECUTIVE'])
 const lockRoles = new Set(['SYSTEM_ADMIN','GROUP_ADMIN','COMPANY_ADMIN','HR_MANAGER','PAYROLL_MANAGER'])
@@ -87,11 +88,11 @@ export default function AttendanceAdmin({session,membership}:{session:Session;me
 
   return <Stack spacing={3}>
     <Paper><Tabs value={section} onChange={(_e,value:Section)=>setSection(value)} variant="scrollable" scrollButtons="auto">
-      <Tab value="records" label="Attendance"/><Tab value="shifts" label="Shifts"/><Tab value="assignments" label="Assignments"/><Tab value="import" label="CSV Import"/>
+      <Tab value="reviews" label="Corrections & overtime"/><Tab value="records" label="Attendance"/><Tab value="shifts" label="Shifts"/><Tab value="assignments" label="Assignments"/><Tab value="import" label="CSV Import"/>
     </Tabs></Paper>
     {error&&<Alert severity="error">{error}</Alert>}{notice&&<Alert severity="success">{notice}</Alert>}
     {busy&&<Box sx={{display:'flex',justifyContent:'center'}}><CircularProgress size={28}/></Box>}
-    {section==='records'&&<>
+    {section==='reviews'&&<AttendanceReviews session={session} membership={membership}/>} {section==='records'&&<>
       <Paper sx={{p:2}}><Stack direction={{xs:'column',md:'row'}} spacing={2} alignItems={{md:'center'}}>
         <TextField type="date" label="From" value={from} onChange={e=>setFrom(e.target.value)} InputLabelProps={{shrink:true}}/>
         <TextField type="date" label="To" value={to} onChange={e=>setTo(e.target.value)} InputLabelProps={{shrink:true}}/>

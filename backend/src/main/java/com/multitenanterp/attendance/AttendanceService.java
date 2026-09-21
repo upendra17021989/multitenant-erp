@@ -87,6 +87,7 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceRecord saveAttendance(UUID id, SaveAttendanceRequest r) {
+        lockTenant();
         requireUnlocked(r.attendanceDate());
 
         if (id != null) {
@@ -117,7 +118,7 @@ public class AttendanceService {
                     .param("overtime",evaluated.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update()
                     :db.sql("""
                     UPDATE attendance_record SET employment_id=:employee,attendance_date=:date,shift_id=:shift,status=:status,
-                      check_in=:in,check_out=:out,worked_minutes=:worked,overtime_minutes=:overtime,source=:source,notes=:notes,updated_at=CURRENT_TIMESTAMP
+                      check_in=:in,check_out=:out,worked_minutes=:worked,overtime_minutes=:overtime,approved_overtime_minutes=0,source=:source,notes=:notes,updated_at=CURRENT_TIMESTAMP
                     WHERE id=:id AND tenant_id=:tenant
                     """).param("id",id).param("tenant",tenant()).param("employee",r.employmentId()).param("date",r.attendanceDate()).param("shift",r.shiftId())
                     .param("status",evaluated.status()).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",evaluated.workedMinutes())
@@ -127,7 +128,9 @@ public class AttendanceService {
         UUID saved=id; return attendance(r.attendanceDate(),r.attendanceDate(),r.employmentId()).stream().filter(a->a.id().equals(saved)).findFirst().orElseThrow();
     }
 
+    @Transactional
     public AttendanceMonthLock lockMonth(YearMonth month, String actor) {
+        lockTenant();
         LocalDate first=month.atDay(1);
         try { db.sql("INSERT INTO attendance_month_lock(id,tenant_id,attendance_month,locked_by) VALUES(:id,:tenant,:month,:actor)")
                 .param("id",UUID.randomUUID()).param("tenant",tenant()).param("month",first).param("actor",actor).update();
@@ -135,7 +138,9 @@ public class AttendanceService {
         return monthLock(first);
     }
 
+    @Transactional
     public void reopenMonth(YearMonth month) {
+        lockTenant();
         int count=db.sql("DELETE FROM attendance_month_lock WHERE tenant_id=:tenant AND attendance_month=:month")
                 .param("tenant",tenant()).param("month",month.atDay(1)).update();
         if(count==0)throw missing("Attendance month lock");
@@ -156,7 +161,7 @@ public class AttendanceService {
                 request.attendanceDate(),
                 request.checkIn(),
                 request.checkOut(),
-                java.time.ZoneId.systemDefault()
+                java.time.ZoneId.of(db.sql("SELECT time_zone FROM tenant WHERE id=:tenant").param("tenant",tenant()).query(String.class).single())
         );
 
         return new EvaluatedAttendance(
@@ -169,7 +174,8 @@ public class AttendanceService {
     private WorkShift shift(UUID id){return shifts(null).stream().filter(s->s.id().equals(id)).findFirst().orElseThrow(()->missing("Shift"));}
     private AttendanceMonthLock monthLock(LocalDate month){return db.sql("SELECT attendance_month,locked_by,locked_at FROM attendance_month_lock WHERE tenant_id=:tenant AND attendance_month=:month")
             .param("tenant",tenant()).param("month",month).query((r,n)->new AttendanceMonthLock(r.getDate(1).toLocalDate(),r.getString(2),r.getTimestamp(3).toInstant())).single();}
-    private void requireUnlocked(LocalDate date){if(db.sql("SELECT COUNT(*) FROM attendance_month_lock WHERE tenant_id=:tenant AND attendance_month=:month")
+    void lockTenant(){db.sql("SELECT id FROM tenant WHERE id=:tenant FOR UPDATE").param("tenant",tenant()).query(UUID.class).single();}
+    void requireUnlocked(LocalDate date){if(db.sql("SELECT COUNT(*) FROM attendance_month_lock WHERE tenant_id=:tenant AND attendance_month=:month")
             .param("tenant",tenant()).param("month",date.withDayOfMonth(1)).query(Integer.class).single()>0)throw conflict("Attendance month is locked");}
     private static WorkShift mapShift(ResultSet r,int n)throws SQLException{return new WorkShift(r.getObject("id",UUID.class),r.getString("code"),r.getString("name"),r.getTime("start_time").toLocalTime(),r.getTime("end_time").toLocalTime(),r.getInt("break_minutes"),r.getInt("grace_in_minutes"),r.getInt("grace_out_minutes"),r.getInt("full_day_minutes"),r.getInt("half_day_minutes"),r.getDate("effective_from").toLocalDate(),date(r,"effective_to"),r.getString("status"));}
     private static AttendanceRecord mapAttendance(ResultSet r,int n)throws SQLException{return new AttendanceRecord(r.getObject("id",UUID.class),r.getObject("employment_id",UUID.class),r.getDate("attendance_date").toLocalDate(),r.getObject("shift_id",UUID.class),r.getString("status"),instant(r,"check_in"),instant(r,"check_out"),(Integer)r.getObject("worked_minutes"),r.getInt("overtime_minutes"),r.getString("source"),r.getString("notes"));}

@@ -3,6 +3,17 @@ import com.multitenanterp.employee.DocumentStorage;import com.multitenanterp.pla
 @Service
 public class PayslipService{
  private final JdbcClient db;private final DocumentStorage storage;private final PayslipPdfGenerator pdf;
+ public List<Payslip> releasedForEmployee(UUID employee){
+  return db.sql(BASE+" WHERE p.tenant_id=:tenant AND p.employment_id=:employee AND p.status='RELEASED' AND pr.status IN ('LOCKED','PAID') ORDER BY pr.payroll_year DESC,pr.payroll_month DESC")
+   .param("tenant",tenant()).param("employee",employee).query(PayslipService::map).list();
+ }
+ public PayslipDownload downloadReleased(UUID id,UUID employee){
+  Stored stored=db.sql(BASE.replace(" FROM payslip",",p.storage_key FROM payslip")+" WHERE p.id=:id AND p.tenant_id=:tenant AND p.employment_id=:employee AND p.status='RELEASED' AND pr.status IN ('LOCKED','PAID')")
+   .param("id",id).param("tenant",tenant()).param("employee",employee)
+   .query((r,n)->new Stored(map(r,n),r.getString("storage_key"))).optional().orElseThrow(()->missing("Payslip"));
+  var resource=storage.load(stored.key());if(!resource.exists())throw missing("Payslip content");
+  return new PayslipDownload(stored.metadata(),resource);
+ }
  public PayslipService(JdbcClient db,DocumentStorage storage,PayslipPdfGenerator pdf){this.db=db;this.storage=storage;this.pdf=pdf;}
  public List<Payslip> list(int year,int month){UUID run=runId(year,month);return db.sql(BASE+" WHERE p.tenant_id=:tenant AND p.payroll_run_id=:run ORDER BY e.employee_number").param("tenant",tenant()).param("run",run).query(PayslipService::map).list();}
  @Transactional public List<Payslip> generate(int year,int month,String actor){UUID tenant=tenant(),run=runId(year,month);String status=db.sql("SELECT status FROM payroll_run WHERE id=:run AND tenant_id=:tenant").param("run",run).param("tenant",tenant).query(String.class).single();if(!status.equals("LOCKED")&&!status.equals("PAID"))throw conflict("Payslips can only be generated for locked or paid payroll");List<Source> sources=db.sql("SELECT r.id,r.employment_id,r.gross_pay,r.deductions,r.net_pay,r.period_days,r.payable_days,e.employee_number,TRIM(CONCAT(p.first_name,' ',COALESCE(p.middle_name||' ',''),p.last_name)),t.legal_name,COALESCE(cp.registered_address,'') FROM payroll_employee_result r JOIN employment e ON e.id=r.employment_id AND e.tenant_id=r.tenant_id JOIN person p ON p.id=e.person_id AND p.tenant_id=e.tenant_id JOIN tenant t ON t.id=r.tenant_id LEFT JOIN company_profile cp ON cp.tenant_id=t.id WHERE r.tenant_id=:tenant AND r.payroll_run_id=:run AND NOT EXISTS(SELECT 1 FROM payslip ps WHERE ps.tenant_id=r.tenant_id AND ps.payroll_run_id=r.payroll_run_id AND ps.employment_id=r.employment_id) ORDER BY e.employee_number").param("tenant",tenant).param("run",run).query((r,n)->new Source(r.getObject(1,UUID.class),r.getObject(2,UUID.class),r.getBigDecimal(3),r.getBigDecimal(4),r.getBigDecimal(5),r.getBigDecimal(6),r.getBigDecimal(7),r.getString(8),r.getString(9),r.getString(10),r.getString(11))).list();for(Source source:sources)generateOne(tenant,run,year,month,source,actor);return list(year,month);}
