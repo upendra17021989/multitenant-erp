@@ -33,7 +33,7 @@ public class AttendanceReviewService {
         UUID id=UUID.randomUUID();
         try {db.sql("INSERT INTO attendance_review(id,tenant_id,attendance_id,review_type,original_record,proposed_check_in,proposed_check_out,overtime_minutes,reason,requested_by) VALUES(:id,:tenant,:attendance,:type,:original,:in,:out,:minutes,:reason,:actor)")
             .param("id",id).param("tenant",tenant()).param("attendance",record.id()).param("type",request.reviewType()).param("original",encode(record))
-            .param("in",request.checkIn()).param("out",request.checkOut()).param("minutes",request.overtimeMinutes()).param("reason",request.reason().trim()).param("actor",actor).update();}
+            .param("in",AttendanceService.jdbcTimestamp(request.checkIn())).param("out",AttendanceService.jdbcTimestamp(request.checkOut())).param("minutes",request.overtimeMinutes()).param("reason",request.reason().trim()).param("actor",actor).update();}
         catch(DataIntegrityViolationException e) {throw conflict("A review of this type is already pending");}
         return find(id);
     }

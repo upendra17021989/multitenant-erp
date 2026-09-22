@@ -114,14 +114,14 @@ public class AttendanceService {
                     INSERT INTO attendance_record(id,tenant_id,employment_id,attendance_date,shift_id,status,check_in,check_out,worked_minutes,overtime_minutes,source,notes)
                     VALUES(:id,:tenant,:employee,:date,:shift,:status,:in,:out,:worked,:overtime,:source,:notes)
                     """).param("id",id).param("tenant",tenant()).param("employee",r.employmentId()).param("date",r.attendanceDate()).param("shift",r.shiftId())
-                    .param("status",evaluated.status()).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",evaluated.workedMinutes())
+                    .param("status",evaluated.status()).param("in",jdbcTimestamp(r.checkIn())).param("out",jdbcTimestamp(r.checkOut())).param("worked",evaluated.workedMinutes())
                     .param("overtime",evaluated.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update()
                     :db.sql("""
                     UPDATE attendance_record SET employment_id=:employee,attendance_date=:date,shift_id=:shift,status=:status,
                       check_in=:in,check_out=:out,worked_minutes=:worked,overtime_minutes=:overtime,approved_overtime_minutes=0,source=:source,notes=:notes,updated_at=CURRENT_TIMESTAMP
                     WHERE id=:id AND tenant_id=:tenant
                     """).param("id",id).param("tenant",tenant()).param("employee",r.employmentId()).param("date",r.attendanceDate()).param("shift",r.shiftId())
-                    .param("status",evaluated.status()).param("in",r.checkIn()).param("out",r.checkOut()).param("worked",evaluated.workedMinutes())
+                    .param("status",evaluated.status()).param("in",jdbcTimestamp(r.checkIn())).param("out",jdbcTimestamp(r.checkOut())).param("worked",evaluated.workedMinutes())
                     .param("overtime",evaluated.overtimeMinutes()).param("source",r.source()==null?"MANUAL":normalize(r.source())).param("notes",clean(r.notes())).update();
             if(count==0)throw missing("Attendance record");
         } catch(DataIntegrityViolationException e){throw conflict("Attendance already exists or references another company");}
@@ -179,6 +179,10 @@ public class AttendanceService {
             .param("tenant",tenant()).param("month",date.withDayOfMonth(1)).query(Integer.class).single()>0)throw conflict("Attendance month is locked");}
     private static WorkShift mapShift(ResultSet r,int n)throws SQLException{return new WorkShift(r.getObject("id",UUID.class),r.getString("code"),r.getString("name"),r.getTime("start_time").toLocalTime(),r.getTime("end_time").toLocalTime(),r.getInt("break_minutes"),r.getInt("grace_in_minutes"),r.getInt("grace_out_minutes"),r.getInt("full_day_minutes"),r.getInt("half_day_minutes"),r.getDate("effective_from").toLocalDate(),date(r,"effective_to"),r.getString("status"));}
     private static AttendanceRecord mapAttendance(ResultSet r,int n)throws SQLException{return new AttendanceRecord(r.getObject("id",UUID.class),r.getObject("employment_id",UUID.class),r.getDate("attendance_date").toLocalDate(),r.getObject("shift_id",UUID.class),r.getString("status"),instant(r,"check_in"),instant(r,"check_out"),(Integer)r.getObject("worked_minutes"),r.getInt("overtime_minutes"),r.getString("source"),r.getString("notes"));}
+    // Bind TIMESTAMPTZ using a JDBC-supported type while preserving the exact instant.
+    static java.time.OffsetDateTime jdbcTimestamp(java.time.Instant value) {
+        return value == null ? null : value.atOffset(java.time.ZoneOffset.UTC);
+    }
     private static LocalDate date(ResultSet r,String c)throws SQLException{var v=r.getDate(c);return v==null?null:v.toLocalDate();}
     private static java.time.Instant instant(ResultSet r,String c)throws SQLException{var v=r.getTimestamp(c);return v==null?null:v.toInstant();}
     private static void validateDates(LocalDate from,LocalDate to){if(to!=null&&to.isBefore(from))throw badRequest("Effective-to date cannot precede effective-from date");}

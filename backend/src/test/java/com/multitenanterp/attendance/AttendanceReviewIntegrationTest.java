@@ -5,6 +5,12 @@ import com.multitenanterp.platform.tenant.TenantContext;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.*;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DelegatingDataSource;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.*;
 import java.util.UUID;
@@ -17,7 +23,12 @@ class AttendanceReviewIntegrationTest {
     private UUID tenant, other, employee;
     private final LocalDate day=LocalDate.of(2026,9,21);
     @BeforeEach void setup() {
-        var ds=new JdbcDataSource(); ds.setURL("jdbc:h2:mem:"+UUID.randomUUID()+";MODE=PostgreSQL;DB_CLOSE_DELAY=-1"); db=JdbcClient.create(ds);
+        var ds=new JdbcDataSource(); ds.setURL("jdbc:h2:mem:"+UUID.randomUUID()+";MODE=PostgreSQL;DB_CLOSE_DELAY=-1"); // Reject the Instant binding that H2 accepts but PostgreSQL does not support.
+        db=JdbcClient.create(new DelegatingDataSource(ds) {
+            @Override public Connection getConnection() throws SQLException {
+                return strictJdbc(Connection.class, super.getConnection());
+            }
+        });
         db.sql("CREATE TABLE tenant(id UUID PRIMARY KEY,time_zone VARCHAR DEFAULT 'Asia/Kolkata')").update();
         db.sql("CREATE TABLE attendance_record(id UUID PRIMARY KEY,tenant_id UUID,employment_id UUID,attendance_date DATE,shift_id UUID,status VARCHAR,check_in TIMESTAMP WITH TIME ZONE,check_out TIMESTAMP WITH TIME ZONE,worked_minutes INT,overtime_minutes INT,approved_overtime_minutes INT DEFAULT 0,source VARCHAR,notes VARCHAR,updated_at TIMESTAMP,UNIQUE(tenant_id,employment_id,attendance_date))").update();
         db.sql("CREATE TABLE attendance_month_lock(id UUID PRIMARY KEY,tenant_id UUID,attendance_month DATE,locked_by VARCHAR,locked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(tenant_id,attendance_month))").update();
@@ -28,6 +39,32 @@ class AttendanceReviewIntegrationTest {
         attendance=new AttendanceService(db); reviews=new AttendanceReviewService(db,attendance,new ObjectMapper().findAndRegisterModules());
     }
     @AfterEach void clear(){TenantContext.clear();}
+    private static <T> T strictJdbc(Class<T> type, T delegate) {
+        return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, (proxy, method, args) -> {
+            if (method.getName().equals("setObject") && args[1] instanceof Instant) {
+                throw new SQLException("Cannot infer SQL type for java.time.Instant", "07006");
+            }
+            try {
+                Object result = method.invoke(delegate, args);
+                return result instanceof PreparedStatement statement
+                        ? strictJdbc(PreparedStatement.class, statement) : result;
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        }));
+    }
+    @Test void punchTimesRoundTripOnCreateUpdateAndClear() {
+        Instant checkIn=OffsetDateTime.parse("2026-09-21T09:00:00+05:30").toInstant();
+        Instant checkOut=checkIn.plusSeconds(8*3600);
+        AttendanceRecord created=attendance.saveAttendance(null,new SaveAttendanceRequest(employee,day,null,"PRESENT",checkIn,checkOut,480,0,"MANUAL",null));
+        assertThat(created.checkIn()).isEqualTo(checkIn);
+        assertThat(created.checkOut()).isEqualTo(checkOut);
+        AttendanceRecord updated=attendance.saveAttendance(created.id(),new SaveAttendanceRequest(employee,day,null,"PRESENT",checkIn,checkOut.plusSeconds(3600),540,60,"MANUAL",null));
+        assertThat(updated.checkOut()).isEqualTo(checkOut.plusSeconds(3600));
+        AttendanceRecord cleared=attendance.saveAttendance(created.id(),new SaveAttendanceRequest(employee,day,null,"ABSENT",null,null,null,0,"MANUAL",null));
+        assertThat(cleared.checkIn()).isNull();
+        assertThat(cleared.checkOut()).isNull();
+    }
     private AttendanceRecord record(){return attendance.saveAttendance(null,new SaveAttendanceRequest(employee,day,null,"PRESENT",null,null,540,60,"MANUAL",null));}
     @Test void overtimeRequiresSeparateApproverAndResetsAfterEdit() {
         AttendanceRecord record=record();
