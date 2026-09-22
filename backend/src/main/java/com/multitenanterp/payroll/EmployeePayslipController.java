@@ -16,6 +16,10 @@ public class EmployeePayslipController {
     }
     @GetMapping
     public List<Payslip> list() { return service.releasedForEmployee(links.currentEmploymentId()); }
+    @PostMapping("/{id}/acknowledgement")
+    public Payslip acknowledge(@PathVariable UUID id, org.springframework.security.core.Authentication authentication) {
+        return service.acknowledge(id, links.currentEmploymentId(), authentication.getName());
+    }
     @GetMapping("/{id}/content")
     public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID id) {
         var download = service.downloadReleased(id, links.currentEmploymentId());

@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-21
+Last updated: 2026-09-22
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -160,7 +160,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Link application users to employments for employee self-service authorization
 - [x] Add employee self-service payslip list and download screens
 - [x] Add payroll-administration payslip generation, release, listing and download screens
-- [ ] Add optional email delivery, delivery audit and employee acknowledgement
+- [x] Add employee payslip acknowledgement with immutable first-receipt actor/timestamp and payroll-admin visibility
+- [ ] Add optional email delivery and delivery-attempt audit
 
 ## Verification history
 
@@ -214,7 +215,23 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Update the HR/payroll requirements checklist with completed scope and remaining acceptance work.
 - [ ] Complete live authenticated employee acceptance testing with deployed storage.
 
-No schema change required. M10 remains IN PROGRESS for optional email delivery, delivery audit and acknowledgement.
+No schema change was required for the 2026-09-21 screen step. Employee acknowledgement was subsequently completed on 2026-09-22; M10 remains IN PROGRESS for optional email delivery and delivery-attempt audit.
+
+## Employee payslip acknowledgement completion (2026-09-22)
+
+- [x] Add Flyway V23 nullable acknowledgement actor/timestamp fields with paired-value constraint; existing payslips remain unacknowledged.
+- [x] Add authenticated employee receipt endpoint using the server-resolved employment and authenticated actor.
+- [x] Restrict acknowledgement to owned, released payslips in the active company with locked/paid payroll.
+- [x] Preserve first acknowledgement actor/timestamp on repeated requests; downloads do not acknowledge automatically.
+- [x] Add employee acknowledgement controls and timestamp display.
+- [x] Show acknowledgement timestamp and actor in payroll administration.
+- [x] Test V23 migration execution on H2, repeated receipts, ownership, tenant isolation, release/payroll state, authenticated actor and missing employee link.
+- [x] `mvn test`: PASS - 69 tests, 0 failures/errors, 1 environment-dependent skip.
+- [x] `npm.cmd run build`: PASS - existing bundle-size warning remains.
+- [ ] Apply V23 through Flyway in the deployed PostgreSQL environment before serving the updated backend.
+- [ ] Complete live employee acknowledgement and payroll-admin acceptance testing.
+
+Optional email delivery and delivery-attempt audit remain the next M10 implementation items.
 
 ## Definition of done
 

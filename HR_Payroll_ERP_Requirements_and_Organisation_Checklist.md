@@ -689,7 +689,23 @@ Provide:
 - [x] Frontend verification: `npm.cmd run build` passed; existing bundle-size warning remains.
 - [ ] Live authenticated employee acceptance test against deployed storage and company data.
 
-This completes the M10 employee self-service payslip screen step. Optional email delivery, delivery audit and employee acknowledgement remain pending; this does not mark the entire M10 milestone or business sign-off complete. No database migration was required.
+This completes the M10 employee self-service payslip screen step. Employee acknowledgement was subsequently completed on 2026-09-22. Optional email delivery and delivery-attempt audit remain pending; this does not mark the entire M10 milestone or business sign-off complete. No database migration was required.
+
+### Employee payslip acknowledgement completion (2026-09-22)
+
+- [x] Explicit employee receipt acknowledgement action for released payslips.
+- [x] Persist the first authenticated actor and receipt timestamp, preserving them on retries.
+- [x] Enforce employee ownership, active-company isolation and locked/paid payroll status.
+- [x] Show receipt timestamp to employees and receipt timestamp/actor to payroll administrators.
+- [x] Add Flyway migration V23; existing payslips begin without acknowledgement.
+- [x] Verify migration and acknowledgement access/retry behavior through automated tests.
+- [x] Backend tests passed: 69 tests, no failures/errors, one environment-dependent skip.
+- [x] Frontend production build passed; existing bundle-size warning remains.
+- [ ] Apply V23 to deployed PostgreSQL through Flyway.
+- [ ] Verify acknowledgement with live employee and payroll-administrator sessions.
+- [ ] Optional email delivery and delivery-attempt audit.
+
+Acknowledgement records receipt only. It does not approve salary calculations or confirm payment. Downloads do not create acknowledgements automatically.
 
 ## 12. Reports, Dashboards and Exports
 
