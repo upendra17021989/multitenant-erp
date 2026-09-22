@@ -91,3 +91,21 @@ Each attempt records the tenant, payslip, recipient snapshot, requesting user, t
 `SENDING` is committed before contacting SMTP. If the process stops or cannot record the final outcome, that record remains visible and blocks a new send for that payslip. An operator must reconcile the attempt against provider logs before any controlled database correction; never automatically retry an unknown outcome. Delivery is synchronous, one payslip per action, with no automatic send on release and no automatic retries. Disabling email keeps download, acknowledgement, and delivery history available.
 
 API: `GET .../payslips/email-settings`, `GET .../payslips/{id}/email-attempts`, and `POST .../payslips/{id}/email` with `{"requestId":"<UUID>"}`, under `/api/payroll/runs/{year}/{month}`. These require the usual authenticated tenant context. No live emails are sent by the automated tests.
+
+### Leave approval chains and notifications
+
+Deploy backend and frontend together and apply Flyway V25. Open **Leave Approvals & Notifications** in the sidebar. Company/group/system administrators and HR managers can configure one to three ordered, distinct stages for their active company:
+
+- **Reporting manager**: the employee's reporting manager must have a linked user account and active company membership. The manager employment is captured when the request is submitted.
+- **HR manager**: HR managers, HR executives, and company/group/system administrators can decide the stage.
+- **Company administrator**: company/group/system administrators can decide the stage.
+
+The default is one HR stage. Existing pending requests receive that default stage during migration. Completed requests retain their original decision records; staged history applies to new requests and migrated pending requests. Changing company settings affects new submissions only. Role access is checked again at decision time. The request creator and leave owner cannot approve their own request, even if they hold an approver role. Role stages use a shared pool: one eligible user decides each stage; a user eligible at multiple stages may act at each stage.
+
+Each approver sees only requests at their assigned current stage. Use **Approve stage** or enter a comment and **Reject**. Leave stays pending until the last stage is approved; only then is balance consumed and approved unpaid leave available to payroll. The decision API requires the inbox's `stepId` to reject stale or repeated actions. All stage decisions and notifications commit with the leave transaction. Rejection/cancellation closes remaining stages and keeps previous decisions in history. Cancellation remains limited to pending requests.
+
+In-app notifications are stored for the current approver pool, the employee's linked account, and the submitting user. They identify the employee number and dates, support marking as read, and show the latest 100 notifications in the active company. Open or refresh the page to load new notifications. No SMTP setup is required for leave notifications. Existing pending requests appear in the inbox after migration; historical notifications are not backfilled.
+
+Before using a reporting-manager chain, configure manager assignments, employee/user links, and approver company roles. Missing eligible approvers block submission with an actionable error. If access is removed while a request is pending, restore the appropriate access or cancel and resubmit after correcting assignments; pending chains are not silently reassigned.
+
+API additions under `/api/leave`: `GET/PUT /approval-policy`, `GET /approval-inbox`, `GET /requests/{id}/history`, `GET /notifications`, and `POST /notifications/{id}/read`. Existing `POST /requests/{id}/decision` now accepts `{ "decision": "APPROVED", "comment": "Reviewed", "stepId": "<current-step-UUID>" }` and enforces stage assignment in the service for both administrators and reporting managers.

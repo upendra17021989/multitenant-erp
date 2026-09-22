@@ -116,8 +116,8 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add tenant-scoped leave types, balances, requests and decisions
 - [x] Add leave administration screens and tenant-isolation tests
 - [ ] Add automated accrual, carry-forward and special-policy processing
-- [ ] Add configurable approval chains, reports, notifications and audit history
-- [ ] Integrate approved unpaid leave with payroll
+- [x] Add configurable approval chains, reports, in-app notifications and decision audit history
+- [x] Integrate approved unpaid leave with payroll
 
 ## M07 checklist
 
@@ -257,6 +257,24 @@ All planned M10 implementation items are complete. M10 remains IN PROGRESS for d
 - [x] Skip repeat rows after successful creation and preserve tenant-local employee-number matching.
 - [x] Verify mixed new/existing/invalid rows, repeated uploads, unchanged existing records, and tenant isolation: 7 employee integration tests passed.
 - [x] Frontend production build passed; existing Node version and bundle-size warnings remain.
+
+## Leave approval chains and in-app notifications (2026-09-22)
+
+- [x] Add Flyway V25 company policies, request-specific approval stages, and tenant/user-scoped notifications.
+- [x] Support ordered reporting-manager, HR, and company-administrator stages with a default single HR stage.
+- [x] Preserve request chain snapshots when company policy changes; capture reporting-manager employment on submission.
+- [x] Enforce current-stage assignment, active company membership, and requester/owner self-approval prevention.
+- [x] Keep leave pending until final approval, then deduct balance once; preserve prior decisions on rejection/cancellation.
+- [x] Record decision actor, timestamp, and comment; require a rejection reason and current stage UUID.
+- [x] Add a sidebar approval inbox, company chain editor, notifications/read controls, and history in employee/HR leave screens.
+- [x] Notify current approvers and employee/submitter in-app on submission, stage progression, and completion/cancellation.
+- [x] Backfill existing pending requests with one HR approval stage; retain completed requests' original final decisions.
+- [x] Verify tenant isolation, role restrictions, notification privacy, migration backfill, configuration snapshots, no eligible approver, revoked access, self-approval, stale/repeated/concurrent decisions, rejection/cancellation, and transaction rollback.
+- [x] Full backend suite: 91 tests, zero failures/errors, one environment-dependent skip. Frontend production build passed with existing Node version and bundle-size warnings.
+- [ ] Apply V25 through Flyway in deployed PostgreSQL and deploy the matching frontend/backend together.
+- [ ] Complete live acceptance with employee, reporting manager, HR, and company administrator accounts.
+
+Existing leave reports expose final request decisions and balances. Approved unpaid leave already feeds payroll; intermediate approval stages retain PENDING status and therefore do not enter payroll. Special leave policies and broader production acceptance remain separate M06 work.
 
 ## Definition of done
 

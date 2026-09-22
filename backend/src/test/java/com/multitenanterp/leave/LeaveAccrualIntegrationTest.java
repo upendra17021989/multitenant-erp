@@ -24,7 +24,7 @@ class LeaveAccrualIntegrationTest {
         }
         tenant=UUID.randomUUID();employee=UUID.randomUUID();db.sql("INSERT INTO tenant(id,leave_accrual_start) VALUES(?,DATE '2024-01-01')").param(tenant).update();
         db.sql("INSERT INTO employment VALUES(?,?,DATE '2024-01-01',NULL)").params(employee,tenant).update();TenantContext.set(tenant);
-        leave=new LeaveService(db);accrual=new LeaveAccrualService(db,leave);
+        leave=new LeaveService(db,new LeaveApprovalService(db));accrual=new LeaveAccrualService(db,leave);
         type=leave.saveType(null,new SaveLeaveTypeRequest("CL","Casual leave",true,new BigDecimal("12"),"MONTHLY",new BigDecimal("0.5"),null,true,new BigDecimal("3"),false,false,"ACTIVE")).id();
     }
     @AfterEach void clear(){TenantContext.clear();}

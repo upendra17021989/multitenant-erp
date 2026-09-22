@@ -26,6 +26,6 @@ public class LeaveController {
  @PutMapping("/balances") @PreAuthorize(ADMIN) public LeaveBalance balance(@Valid @RequestBody SaveLeaveBalanceRequest r){return service.saveBalance(r);}
  @GetMapping("/requests") public List<LeaveRequest> requests(@RequestParam(required=false) UUID employmentId,@RequestParam(required=false) String status){return service.requests(scope(employmentId),status);}
  @PostMapping("/requests") @ResponseStatus(HttpStatus.CREATED) public LeaveRequest request(@Valid @RequestBody CreateLeaveRequest r,Authentication a){scope(r.employmentId());return service.request(r,a.getName());}
- @PostMapping("/requests/{id}/decision") @PreAuthorize(ADMIN) public LeaveRequest decide(@PathVariable UUID id,@Valid @RequestBody DecideLeaveRequest r,Authentication a){return service.decide(id,r,a.getName());}
+ @PostMapping("/requests/{id}/decision") public LeaveRequest decide(@PathVariable UUID id,@Valid @RequestBody DecideLeaveRequest r,Authentication a){return service.decide(id,r,a.getName());}
  @PostMapping("/requests/{id}/cancel") public LeaveRequest cancel(@PathVariable UUID id,Authentication a){return service.cancelOwned(id,a.getName(),scope(null));}
 }

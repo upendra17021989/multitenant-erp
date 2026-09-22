@@ -392,6 +392,18 @@ Required samples:
 
 ## 7. Leave Management
 
+Implemented on 2026-09-22:
+
+- [x] Company-specific ordered reporting-manager, HR, and company-administrator approval stages.
+- [x] Approver inbox with current-stage authorization and requester/owner self-approval prevention.
+- [x] Decision comments, actors, timestamps, and history visible to authorized participants.
+- [x] In-app notifications for current approvers, employees, and submitting users, with read tracking.
+- [x] Final-stage-only balance deduction, preserved earlier decisions, and safe rejection/cancellation.
+- [x] Full backend suite passed: 91 tests, zero failures/errors, one environment-dependent skip; frontend build passed.
+- [ ] Deploy Flyway V25 and matching frontend/backend; validate the workflow with live company accounts.
+
+Approval policy changes apply to new requests. Existing pending requests receive one HR stage during migration. Leave notifications are in-app; they require no email configuration.
+
 For every leave type, collect:
 
 | Rule | Example/response |

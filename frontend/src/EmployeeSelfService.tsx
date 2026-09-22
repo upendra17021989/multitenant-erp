@@ -1,3 +1,4 @@
+import {LeaveHistory} from './LeaveApprovals'
 import EmployeePayslips from './EmployeePayslips'
 import {useEffect, useState, type FormEvent} from 'react'
 import type {Session} from '@supabase/supabase-js'
@@ -86,7 +87,7 @@ export default function EmployeeSelfService({session, membership}:{session:Sessi
       {!busy && !requests.length && <Typography>No leave requests.</Typography>}
       {requests.map(request => <Stack key={request.id} direction="row" alignItems="center" spacing={2}>
         <Typography>{name(request.leaveTypeId)}: {request.startDate} to {request.endDate} ({request.requestedDays} days) — {request.status}</Typography>
-        {request.status === 'PENDING' && <Button disabled={busy} onClick={() => void mutate(`/leave/requests/${request.id}/cancel`)}>Cancel</Button>}
+        <LeaveHistory session={session} membership={membership} requestId={request.id}/>{request.status === 'PENDING' && <Button disabled={busy} onClick={() => void mutate(`/leave/requests/${request.id}/cancel`)}>Cancel</Button>}
       </Stack>)}
     </Paper>
   </Stack>
