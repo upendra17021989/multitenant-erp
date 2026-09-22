@@ -161,7 +161,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add employee self-service payslip list and download screens
 - [x] Add payroll-administration payslip generation, release, listing and download screens
 - [x] Add employee payslip acknowledgement with immutable first-receipt actor/timestamp and payroll-admin visibility
-- [ ] Add optional email delivery and delivery-attempt audit
+- [x] Add optional email delivery and delivery-attempt audit
 
 ## Verification history
 
@@ -215,7 +215,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Update the HR/payroll requirements checklist with completed scope and remaining acceptance work.
 - [ ] Complete live authenticated employee acceptance testing with deployed storage.
 
-No schema change was required for the 2026-09-21 screen step. Employee acknowledgement was subsequently completed on 2026-09-22; M10 remains IN PROGRESS for optional email delivery and delivery-attempt audit.
+No schema change was required for the 2026-09-21 screen step. Employee acknowledgement was subsequently completed on 2026-09-22; M10 implementation is complete; deployed configuration and live acceptance remain pending.
 
 ## Employee payslip acknowledgement completion (2026-09-22)
 
@@ -231,7 +231,24 @@ No schema change was required for the 2026-09-21 screen step. Employee acknowled
 - [ ] Apply V23 through Flyway in the deployed PostgreSQL environment before serving the updated backend.
 - [ ] Complete live employee acknowledgement and payroll-admin acceptance testing.
 
-Optional email delivery and delivery-attempt audit remain the next M10 implementation items.
+Optional email delivery and delivery-attempt audit were subsequently implemented on 2026-09-22. M10 remains IN PROGRESS only for deployment and live acceptance.
+
+## Optional payslip email and delivery audit completion (2026-09-22)
+
+- [x] Add Flyway V24 tenant-scoped delivery attempts with recipient, actor, timestamps, result, failure code, and unique request UUID.
+- [x] Add optional SMTP delivery, disabled by default, with required STARTTLS by default and bounded timeouts.
+- [x] Send the stored PDF after size/SHA-256 verification, using employment work email and company branding.
+- [x] Restrict send actions to payroll managers/admins, released payslips, active tenant, and locked/paid payroll.
+- [x] Preserve failed attempts, make repeated request UUIDs idempotent, and block concurrent sends for the same payslip.
+- [x] Add payroll-screen send/resend controls and delivery history, including disabled, empty, busy and error states.
+- [x] Test migration execution, success/failure, invalid email, corrupted/missing content, tenant/period restrictions, role enforcement, duplicate/concurrent requests, and MIME attachment contents without sending live emails.
+- [x] Backend `mvn.cmd test`: 79 tests, zero failures/errors, one environment-dependent skip.
+- [x] Frontend `npm.cmd run build`: PASS; existing Node version and bundle-size warnings remain.
+- [x] Document activation, SMTP acceptance semantics, and operator reconciliation for interrupted/unknown outcomes.
+- [ ] Apply V24 in deployed PostgreSQL, configure SMTP and verified sender, then enable `PAYSLIP_EMAIL_ENABLED` if desired.
+- [ ] Complete live employee/admin acceptance and a controlled email delivery test against deployed storage.
+
+All planned M10 implementation items are complete. M10 remains IN PROGRESS for deployed setup and live acceptance; no live email was sent during development.
 
 ## Definition of done
 

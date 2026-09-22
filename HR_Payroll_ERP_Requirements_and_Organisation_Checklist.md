@@ -670,7 +670,7 @@ Provide:
 - Email wording, sender address and delivery method
 
 - [x] Payslip available in employee portal
-- [ ] Payslip emailed to employee
+- [x] Optional payslip email delivery implemented (SMTP activation and live acceptance pending)
 - [ ] Bulk ZIP/PDF download for Payroll team
 - [ ] Password-protected PDF
 - [ ] Digital signature required
@@ -689,7 +689,7 @@ Provide:
 - [x] Frontend verification: `npm.cmd run build` passed; existing bundle-size warning remains.
 - [ ] Live authenticated employee acceptance test against deployed storage and company data.
 
-This completes the M10 employee self-service payslip screen step. Employee acknowledgement was subsequently completed on 2026-09-22. Optional email delivery and delivery-attempt audit remain pending; this does not mark the entire M10 milestone or business sign-off complete. No database migration was required.
+This completes the M10 employee self-service payslip screen step. Employee acknowledgement was subsequently completed on 2026-09-22. Optional email delivery and delivery-attempt audit were subsequently implemented on 2026-09-22; deployed activation and business sign-off remain pending. No database migration was required.
 
 ### Employee payslip acknowledgement completion (2026-09-22)
 
@@ -703,7 +703,7 @@ This completes the M10 employee self-service payslip screen step. Employee ackno
 - [x] Frontend production build passed; existing bundle-size warning remains.
 - [ ] Apply V23 to deployed PostgreSQL through Flyway.
 - [ ] Verify acknowledgement with live employee and payroll-administrator sessions.
-- [ ] Optional email delivery and delivery-attempt audit.
+- [x] Optional email delivery and delivery-attempt audit (2026-09-22).
 
 Acknowledgement records receipt only. It does not approve salary calculations or confirm payment. Downloads do not create acknowledgements automatically.
 

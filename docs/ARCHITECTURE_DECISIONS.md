@@ -15,3 +15,9 @@ Accepted on 2026-09-02:
 ## Initial architecture
 
 Use a React/TypeScript/MUI frontend, Java 21 Spring Boot modular-monolith backend, PostgreSQL, object storage, and background jobs. Preserve domain module boundaries so modules can scale independently later.
+
+## Payslip email delivery (2026-09-22)
+
+Optional SMTP delivery is an explicit payroll-manager action, disabled by default. It uses the tenant's company name, employment work email, and original stored payslip PDF. A shared, server-configured verified sender is used. Release and final-payroll checks apply before delivery; recipient addresses cannot be supplied by the browser.
+
+Delivery attempts commit before the external send and complete in a separate transaction, preserving failures. Tenant-scoped request UUIDs prevent repeated requests from sending twice. Concurrent sends for the same payslip are blocked while an attempt is in progress. SMTP acceptance does not prove delivery. Interrupted attempts retain an unknown outcome and require operator reconciliation, with no automatic retry. This initial scope sends one payslip synchronously; bulk queues and bounce tracking are outside M10's optional delivery implementation.

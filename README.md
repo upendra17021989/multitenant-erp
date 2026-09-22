@@ -66,3 +66,28 @@ Configure these Cloud Run runtime variables in **Edit and deploy new revision > 
 Create the document bucket as private in Supabase Storage. The service-role key belongs only in Cloud Run/Secret Manager and must never use a `VITE_` prefix or be exposed to the browser.
 
 Cloud Run supplies `PORT` automatically. The application reads it through `server.port`. The local `backend/.env` file is optional and is excluded from the container image.
+
+### Optional payslip email
+
+Apply Flyway V24 with the updated backend, and configure these server-only values to enable email:
+
+```properties
+PAYSLIP_EMAIL_ENABLED=true
+PAYSLIP_EMAIL_FROM=payroll@example.com
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=your-smtp-user
+SMTP_PASSWORD=your-smtp-secret
+SMTP_AUTH=true
+SMTP_STARTTLS=true
+```
+
+Email is disabled by default. Store SMTP credentials in Secret Manager. STARTTLS is enabled and required by default; connection/read/write timeouts are bounded. Enabled email requires a configured host and valid sender address at startup. The sender must be authorized by your mail provider.
+
+In Salary & Payroll > Payslips, load a month and open **Email & history** for an employee. Payroll managers and company/group/system administrators can explicitly send a released payslip from locked or paid payroll. Payroll executives can inspect history. The recipient is the employment's work email; no personal-email fallback, CC, or browser-supplied recipient is used. The original stored PDF is checked against its recorded size and SHA-256 before attachment. Company name and payroll period appear in the message.
+
+Each attempt records the tenant, payslip, recipient snapshot, requesting user, timestamps, status, and a safe failure code. `ACCEPTED` means SMTP accepted the message, not confirmed inbox delivery. `FAILED` records invalid addresses, unavailable/corrupt documents, or a send error. An SMTP timeout can still mean the provider accepted a message; check provider logs before sending again. Each explicit resend creates a new audit record. Reusing the same request UUID returns the original attempt without sending again.
+
+`SENDING` is committed before contacting SMTP. If the process stops or cannot record the final outcome, that record remains visible and blocks a new send for that payslip. An operator must reconcile the attempt against provider logs before any controlled database correction; never automatically retry an unknown outcome. Delivery is synchronous, one payslip per action, with no automatic send on release and no automatic retries. Disabling email keeps download, acknowledgement, and delivery history available.
+
+API: `GET .../payslips/email-settings`, `GET .../payslips/{id}/email-attempts`, and `POST .../payslips/{id}/email` with `{"requestId":"<UUID>"}`, under `/api/payroll/runs/{year}/{month}`. These require the usual authenticated tenant context. No live emails are sent by the automated tests.
