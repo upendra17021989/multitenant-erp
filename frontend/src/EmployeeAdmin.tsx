@@ -12,7 +12,7 @@ type Field = { key: string; label: string; type?: 'date' | 'email' | 'select'; o
 type Masters = { branches: Option[]; departments: Option[]; designations: Option[]; grades: Option[]; costCentres: Option[]; employees: Option[] }
 type EmployeeDocument = { id: string; documentType: string; fileName: string; contentType: string; sizeBytes: number; uploadedAt: string }
 type EmployeeUserLink = { id: string; employmentId: string; userEmail: string; linkedAt: string }
-type ImportResult = { totalRows: number; acceptedRows: number; rejectedRows: number; rows: { rowNumber: number; accepted: boolean; employeeNumber?: string; error?: string }[] }
+type ImportResult = { totalRows: number; acceptedRows: number; rejectedRows: number; skippedRows: number; rows: { rowNumber: number; accepted: boolean; skipped: boolean; employeeNumber?: string; error?: string; message?: string }[] }
 
 const emptyMasters: Masters = { branches: [], departments: [], designations: [], grades: [], costCentres: [], employees: [] }
 const editRoles = new Set(['SYSTEM_ADMIN', 'GROUP_ADMIN', 'COMPANY_ADMIN', 'HR_MANAGER'])
@@ -121,7 +121,7 @@ export default function EmployeeAdmin({ session, membership }: { session: Sessio
       }
       const result = await response.json() as ImportResult
       setImportResult(result); setImportFile(null)
-      setNotice(`Import complete: ${result.acceptedRows} accepted, ${result.rejectedRows} rejected.`)
+      setNotice(`Import complete: ${result.acceptedRows} accepted, ${result.skippedRows ?? 0} skipped (already exists), ${result.rejectedRows} rejected.`)
       await load()
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to import employees.') }
     finally { setBusy(false) }
@@ -142,8 +142,8 @@ export default function EmployeeAdmin({ session, membership }: { session: Sessio
         </TextField>
         <Button type="submit" variant="contained" disabled={busy || !importFile || !sheetName.trim()}>Upload employees</Button>
       </Stack>
-      {importResult && <Box sx={{ mt: 2 }}><Alert severity={importResult.rejectedRows ? 'warning' : 'success'}>{importResult.acceptedRows} accepted; {importResult.rejectedRows} rejected.</Alert>
-        {importResult.rows.filter((row) => !row.accepted).map((row) => <Typography key={row.rowNumber} color="error" variant="body2" sx={{ mt: 0.75 }}>Row {row.rowNumber}{row.employeeNumber ? ` (${row.employeeNumber})` : ''}: {row.error}</Typography>)}
+      {importResult && <Box sx={{ mt: 2 }}><Alert severity={importResult.rejectedRows ? 'warning' : 'success'}>{importResult.acceptedRows} accepted; {importResult.skippedRows ?? 0} skipped (already exists); {importResult.rejectedRows} rejected.</Alert>
+        {importResult.rows.filter((row) => !row.accepted).map((row) => <Typography key={row.rowNumber} color={row.skipped ? 'text.secondary' : 'error'} variant="body2" sx={{ mt: 0.75 }}>Row {row.rowNumber}{row.employeeNumber ? ` (${row.employeeNumber})` : ''}: {row.skipped ? (row.message ?? 'Already exists') : row.error}</Typography>)}
       </Box>}
     </Paper>}
     <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} alignItems="flex-start">

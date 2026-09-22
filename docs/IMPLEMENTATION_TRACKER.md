@@ -250,6 +250,16 @@ Optional email delivery and delivery-attempt audit were subsequently implemented
 
 All planned M10 implementation items are complete. M10 remains IN PROGRESS for deployed setup and live acceptance; no live email was sent during development.
 
+## Employee import duplicate handling (2026-09-22)
+
+- [x] Skip employee codes already present in the active tenant before validating other row fields; preserve existing employee data.
+- [x] Report `skippedRows` separately from accepted/rejected counts and show skipped rows as “Already exists” without an error.
+- [x] Skip repeat rows after successful creation and preserve tenant-local employee-number matching.
+- [x] Verify mixed new/existing/invalid rows, repeated uploads, unchanged existing records, and tenant isolation: 7 employee integration tests passed.
+- [x] Frontend production build passed; existing Node version and bundle-size warnings remain.
+
 ## Definition of done
+
+- Employee designation import fix (2026-09-22): lookup now uses `designation.title`, while branch/department/grade use `name`. Added a regression test for case-insensitive title matching and tenant isolation. All 8 employee integration tests passed; no database migration required.
 
 Code, schema, tests, builds, documentation, and this tracker must all be updated.

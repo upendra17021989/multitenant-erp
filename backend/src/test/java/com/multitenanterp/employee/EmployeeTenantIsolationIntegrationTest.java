@@ -133,6 +133,85 @@ class EmployeeTenantIsolationIntegrationTest {
     }
 
     @Test
+    void existingEmployeesAreSkippedWithoutErrorsOrChangesAndOnlyInTheirTenant() throws Exception {
+        TenantContext.set(tenantA);
+        Employee existing=service.create(request("EMP100","Original",null));
+        TenantContext.set(tenantB);
+        service.create(request("EMP200","Other company",null));
+        byte[] content;
+        try(var workbook=new XSSFWorkbook();var output=new ByteArrayOutputStream()){
+            var sheet=workbook.createSheet("Employees");
+            var header=sheet.createRow(0);
+            String[] columns={"Employee Code","First Name","Join Date"};
+            for(int i=0;i<columns.length;i++)header.createCell(i).setCellValue(columns[i]);
+            String[][] rows={
+                {" emp100 ","Changed","invalid date"},
+                {"EMP100","",""},
+                {"EMP200","Jane Doe","2026-01-15"},
+                {"EMP200","Jane Doe","2026-01-15"},
+                {"EMP300","SingleName","2026-01-15"}
+            };
+            for(int i=0;i<rows.length;i++){
+                var row=sheet.createRow(i+1);
+                for(int j=0;j<columns.length;j++)row.createCell(j).setCellValue(rows[i][j]);
+            }
+            workbook.write(output);content=output.toByteArray();
+        }
+        var file=new MockMultipartFile("file","employees.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",content);
+        TenantContext.set(tenantA);
+        var result=importer.importExcel(file,"Employees","PERMANENT");
+        assertThat(result.totalRows()).isEqualTo(5);
+        assertThat(result.acceptedRows()).isEqualTo(1);
+        assertThat(result.skippedRows()).isEqualTo(3);
+        assertThat(result.rejectedRows()).isEqualTo(1);
+        assertThat(result.rows().stream().filter(EmployeeImportRowResult::skipped)).allSatisfy(row->{
+            assertThat(row.accepted()).isFalse();
+            assertThat(row.error()).isNull();
+            assertThat(row.message()).isEqualTo("Already exists");
+        });
+        assertThat(service.employee(existing.id()).firstName()).isEqualTo("Original");
+        assertThat(service.employees(null)).hasSize(2);
+        var retry=importer.importExcel(file,"Employees","PERMANENT");
+        assertThat(retry.acceptedRows()).isZero();
+        assertThat(retry.skippedRows()).isEqualTo(4);
+        assertThat(retry.rejectedRows()).isEqualTo(1);
+        TenantContext.set(tenantB);
+        assertThat(service.employees(null)).singleElement().satisfies(employee->assertThat(employee.firstName()).isEqualTo("Other company"));
+    }
+
+    @Test
+    void designationImportUsesTitleAndMatchesOnlyTheActiveTenant() throws Exception {
+        UUID designation=UUID.randomUUID();
+        db.sql("INSERT INTO designation(id,tenant_id,title) VALUES(?,?,'FITTER'),(?,?,'FITTER'),(?,?,'OTHER COMPANY ONLY')")
+                .params(designation,tenantA,UUID.randomUUID(),tenantB,UUID.randomUUID(),tenantB).update();
+        byte[] content;
+        try(var workbook=new XSSFWorkbook();var output=new ByteArrayOutputStream()){
+            var sheet=workbook.createSheet("Employees");
+            String[][] values={
+                {"Employee Code","First Name","Join Date","Designation"},
+                {"10002","Jane Doe","2026-01-15"," fitter "},
+                {"10003","John Doe","2026-01-15","OTHER COMPANY ONLY"}
+            };
+            for(int i=0;i<values.length;i++){
+                var row=sheet.createRow(i);
+                for(int j=0;j<values[i].length;j++)row.createCell(j).setCellValue(values[i][j]);
+            }
+            workbook.write(output);content=output.toByteArray();
+        }
+        TenantContext.set(tenantA);
+        var result=importer.importExcel(new MockMultipartFile("file","employees.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",content),"Employees","PERMANENT");
+        assertThat(result.acceptedRows()).as(result.rows().toString()).isEqualTo(1);
+        assertThat(result.rejectedRows()).isEqualTo(1);
+        assertThat(result.rows().get(1).error()).isEqualTo("Unknown designation: OTHER COMPANY ONLY");
+        assertThat(service.employees(null)).singleElement().satisfies(employee->{
+            assertThat(employee.employeeNumber()).isEqualTo("10002");
+            assertThat(employee.designationId()).isEqualTo(designation);
+        });
+    }
+
+    @Test
     void userEmploymentLinksAreTenantScopedAndResolveTheCurrentEmployee() {
         UUID appUser=UUID.randomUUID(),authUser=UUID.randomUUID();
         db.sql("INSERT INTO app_user(id,auth_user_id,email,status) VALUES(?,?,?,?)").params(appUser,authUser,"employee@example.com","ACTIVE").update();
@@ -193,7 +272,7 @@ class EmployeeTenantIsolationIntegrationTest {
         db.sql("CREATE TABLE user_tenant_role(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,user_id UUID NOT NULL,role_code VARCHAR(80),revoked_at TIMESTAMP)").update();
         db.sql("CREATE TABLE branch(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE department(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
-        db.sql("CREATE TABLE designation(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
+        db.sql("CREATE TABLE designation(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,title VARCHAR(160),UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE grade(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE cost_centre(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,UNIQUE(id,tenant_id))").update();
         db.sql("CREATE TABLE person(id UUID PRIMARY KEY,tenant_id UUID NOT NULL,first_name VARCHAR(100),middle_name VARCHAR(100),last_name VARCHAR(100),date_of_birth DATE,gender VARCHAR(30),personal_email VARCHAR(320),mobile_number VARCHAR(30),current_address VARCHAR(4000),permanent_address VARCHAR(4000),emergency_contact_name VARCHAR(160),emergency_contact_phone VARCHAR(30),title VARCHAR(30),marital_status VARCHAR(30),father_guardian_name VARCHAR(160),updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(id,tenant_id))").update();
