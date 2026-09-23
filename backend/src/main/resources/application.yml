@@ -44,6 +44,10 @@ server:
     include-message: always
 
 app:
+  auth:
+    supabase:
+      url: ${SUPABASE_URL:}
+      secret-key: ${SUPABASE_SECRET_KEY:${SUPABASE_SERVICE_ROLE_KEY:}}
   payslip-email:
     enabled: ${PAYSLIP_EMAIL_ENABLED:false}
     from: ${PAYSLIP_EMAIL_FROM:}

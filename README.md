@@ -60,10 +60,17 @@ Configure these Cloud Run runtime variables in **Edit and deploy new revision > 
 - `CORS_ALLOWED_ORIGINS`: comma-separated Vercel origins, for example `https://example.vercel.app,https://example.com`
 - `DOCUMENT_STORAGE_PROVIDER`: `supabase` in deployed environments (`filesystem` is the local default)
 - `SUPABASE_URL`: Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY`: server-only secret used by the backend for private document storage
+- `SUPABASE_SECRET_KEY`: preferred server-only Supabase secret used for account invitations
+- `SUPABASE_SERVICE_ROLE_KEY`: legacy server-only key used as the account-invitation fallback and for private document storage
 - `SUPABASE_DOCUMENT_BUCKET`: private bucket name, default `employee-documents`
 
 Create the document bucket as private in Supabase Storage. The service-role key belongs only in Cloud Run/Secret Manager and must never use a `VITE_` prefix or be exposed to the browser.
+
+### Account administration
+
+Company, group, and system administrators can open **Setup > Account Administration** to invite a user, assign company roles, and optionally link the account to an employee in one operation. The invitation is sent by Supabase Auth; the employee follows that email and sets a password on the activation screen. Configure the Supabase Site URL/allowed redirect URL to point to the deployed frontend. `SUPABASE_URL` and either `SUPABASE_SECRET_KEY` or the legacy `SUPABASE_SERVICE_ROLE_KEY` must be configured on the backend. These secrets must never be exposed through frontend environment variables.
+
+Assignable roles are Employee, HR Executive, HR Manager, Payroll Executive, Payroll Manager, and Company Administrator. Group and system administrator access cannot be granted from this company-scoped screen. Disabling is immediate for ERP authorization, cannot be performed on the administrator's own account, and is blocked for multi-company users so company administrators cannot remove access outside their company.
 
 Cloud Run supplies `PORT` automatically. The application reads it through `server.port`. The local `backend/.env` file is optional and is excluded from the container image.
 

@@ -51,6 +51,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add frontend Supabase email/password session handling
 - [x] Add frontend authorized-company selector and tenant-aware API client
 - [x] Add cross-tenant authorization tests
+- [x] Add server-side account invitation, company-role assignment and optional employee linking administration
 - [ ] Provision initial Supabase Auth users and map their company roles
 - [ ] Complete authenticated end-to-end test with a real user session
 
