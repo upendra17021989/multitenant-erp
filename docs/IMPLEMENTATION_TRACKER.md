@@ -1,6 +1,6 @@
 # Implementation Tracker
 
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 
 This is the delivery source of truth. Update it whenever a milestone changes state. Architectural commitments are recorded in `ARCHITECTURE_DECISIONS.md`.
 
@@ -102,7 +102,7 @@ This is the delivery source of truth. Update it whenever a milestone changes sta
 - [x] Add attendance evaluation for full day, half day, absence and missing punches
 - [x] Add grace-period, overtime and overnight-shift evaluation
 - [x] Prevent records from being moved out of locked attendance months
-- [ ] Add full attendance-record and month-lock tenant-isolation tests
+- [x] Add full attendance-record and month-lock tenant-isolation tests
 - [ ] Add tenant-specific timezone configuration
 - [x] Add backend CSV attendance import with row-level validation and summary
 - [x] Add CSV attendance upload controls to the attendance UI
