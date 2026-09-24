@@ -19,6 +19,12 @@ Greenfield HR and payroll platform for multiple independent legal entities.
 
 Start with `docs/IMPLEMENTATION_TRACKER.md`. It is the durable source of truth for completed work, current work, decisions, and next steps.
 
+## User guide
+
+See the [Amar Group ERP User Manual](docs/USER_MANUAL.md) for account activation, employee self-service, HR, attendance, leave approvals, payroll setup, payslips, financial requests, workflows, and reports.
+
+The site links to the browser guide from the sign-in screen and application header. It opens at `/?view=user-manual` in a new tab and supports printing or saving as PDF. The guide is bundled from `docs/USER_MANUAL.md`; edit that file and rebuild/redeploy the frontend to publish updates. The guide itself does not require sign-in and contains no company records.
+
 ## Local development
 
 1. Copy `.env.example` to `backend/.env` and enter the JDBC and Supabase Auth values.
