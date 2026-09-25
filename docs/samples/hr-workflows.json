@@ -1,0 +1,64 @@
+[
+  {
+    "workflowType": "RECRUITMENT",
+    "employmentId": null,
+    "title": "[SAMPLE] Meera Shah - Accounts Executive recruitment",
+    "description": "Fictional hiring case for an Accounts Executive vacancy. Budget: INR 480,000 annual CTC. Record candidate consent, screening notes, interview feedback, reference checks and the offer response in the checklist evidence.",
+    "effectiveDate": "2026-10-01",
+    "configuration": {}
+  },
+  {
+    "workflowType": "ONBOARDING",
+    "employmentId": "00000000-0000-0000-0000-000000000001",
+    "title": "[SAMPLE] New Accounts Executive onboarding",
+    "description": "Fictional induction plan: verify the signed contract and identity/bank documents, configure employee and payroll details, arrange application access and complete company induction. Target completion: first working week.",
+    "effectiveDate": "2026-10-05",
+    "configuration": {}
+  },
+  {
+    "workflowType": "TRAINING",
+    "employmentId": "00000000-0000-0000-0000-000000000001",
+    "title": "[SAMPLE] Excel and monthly reconciliation training",
+    "description": "Fictional two-session learning plan covering lookup formulas, pivot tables and bank reconciliation. Trainer: Finance Lead. Success criterion: complete a practice reconciliation with at least 80 percent assessment score. Record attendance and assessment evidence before review.",
+    "effectiveDate": "2026-10-15",
+    "configuration": {}
+  },
+  {
+    "workflowType": "APPRAISAL",
+    "employmentId": "00000000-0000-0000-0000-000000000001",
+    "title": "[SAMPLE] April-September 2026 performance review",
+    "description": "Fictional review covering April 1 to September 30, 2026. Goals: timely month-end reconciliation, accurate reporting and stakeholder response. Proposed overall rating: 4/5. Collect employee self-review, justify the rating and record the feedback discussion.",
+    "effectiveDate": "2026-10-01",
+    "configuration": { "rating": 4 }
+  },
+  {
+    "workflowType": "PROMOTION",
+    "employmentId": "00000000-0000-0000-0000-000000000001",
+    "title": "[SAMPLE] Promotion to Senior Accounts Executive",
+    "description": "Fictional promotion proposal based on independent ownership of reconciliations and mentoring new team members. Review role scope, budget and reporting-line impact; prepare the employee communication. Select the intended new designation before creating this case.",
+    "effectiveDate": "2026-10-01",
+    "configuration": { "designationId": "00000000-0000-0000-0000-000000000002" }
+  },
+  {
+    "workflowType": "SALARY_REVISION",
+    "employmentId": "00000000-0000-0000-0000-000000000001",
+    "title": "[SAMPLE] Annual CTC revision to INR 600,000",
+    "description": "Fictional annual salary review proposing INR 600,000 annual CTC from October 1, 2026. Record budget approval and verify the selected active salary structure and effective date before submitting for independent review.",
+    "effectiveDate": "2026-10-01",
+    "configuration": {
+      "salaryStructureId": "00000000-0000-0000-0000-000000000003",
+      "annualCtc": 600000.00
+    }
+  },
+  {
+    "workflowType": "EXIT",
+    "employmentId": "00000000-0000-0000-0000-000000000004",
+    "title": "[SAMPLE] Voluntary resignation and final settlement",
+    "description": "Fictional exit case with last working day October 30, 2026. Illustrative settlement earnings: INR 45,000; deductions: INR 5,000; net: INR 40,000. Confirm resignation, asset/access clearance, loan reconciliation, settlement calculations and payment or recovery reference. These amounts are examples, not calculated payroll results.",
+    "effectiveDate": "2026-10-30",
+    "configuration": {
+      "settlementEarnings": 45000.00,
+      "settlementDeductions": 5000.00
+    }
+  }
+]
